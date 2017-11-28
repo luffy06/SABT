@@ -84,6 +84,7 @@ def findAnsl(sw, sentimentdic):
   if sw in sentimentdic:
     return sentimentdic[sw]
   else:
+    # todo
     print("Not Found")
     return '0'
 
@@ -111,7 +112,6 @@ def process(testSetName):
 
     chara = getChara(data, themeDic, sentimentDic, preDic)
 
-    # 质量/TH  很 好/TH ， 用/SW 着 很 舒服/SW ， 感觉/TH 有点 小贵/SW 啊
     for i in range(length-1, -1, -1):
       if chara[i] == 'SW' and found[i] == False:
         found[i] = True
