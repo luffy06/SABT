@@ -1,4 +1,5 @@
 from QcloudApi.qcloudapi import QcloudApi
+from aip import AipNlp
 import jieba
 import fileutil
 import json
@@ -51,8 +52,10 @@ class TencentWenZhi(object):
 
   def cutWord(self, text, times):
     if times > 5:
+      print("error:" + text + " in LexicalAnalysis\nMessage: TimeOut")
       jb = JieBa()
       return jb.cutWord(text)
+
     action = "LexicalAnalysis"
     params = {
       'text': text,
@@ -76,7 +79,7 @@ class TencentWenZhi(object):
     result = ""
     for rd in rawdata:
       text = rd.text
-      res = self.cutWord(text)
+      res = self.cutWord(text, 0)
       for r in res:
         result = result + r + " "
       result = result + "\n"
@@ -103,11 +106,50 @@ class JieBa(object):
       result = result + "\n"
     fileutil.writeFile(filenameout, result)
 
+class BaiDuNlp(object):
+  """docstring for BaiDuNlp"""
+  def __init__(self):
+    super(BaiDuNlp, self).__init__()
+    self.APP_ID = '10323015'
+    self.API_KEY = 'zYbYSDZxIFvH4I53ye2jp8qf'
+    self.SECRET_KEY = '3os02bOi9hxZC9775MbKVcYo4BP7GTSm'
+    self.client = AipNlp(self.APP_ID, self.API_KEY, self.SECRET_KEY)
+
+  def cutWord(self, text, times):
+    if times > 5:
+      print("error:" + text + " in BaiDuNlp\nMessage: TimeOut")
+      jb = JieBa()
+      return jb.cutWord(text)
+
+    result = []
+    res = self.client.dnnlm(text.encode('GBK'))
+    if 'error_code' not in res:
+      for r in res['items']:
+        result.append(r['word'])
+      return result
+    else:
+      return self.cutWord(text, times + 1)
+
+  def cutWordByCSVFile(self, filenamein, filenameout):
+    rawdata = fileutil.readFileFromCSV(filenamein)
+    fileutil.deleteFileIfExist(filenameout)
+    result = ""
+    for rd in rawdata:
+      text = rd.text
+      res = self.cutWord(text, 0)
+      for r in res:
+        result = result + r + " "
+      result = result + "\n"
+    fileutil.writeFile(filenameout, result)
+
+
 def test():
   # jb = JieBa()
   # JieBa.cutWordByCSVFile("./data/test_semi.csv", "./data/test_cutted.out")
-  twz = TencentWenZhi()
-  twz.cutWordByCSVFile("./data/test_semi.csv", "./data/test_cutted.out")
+  # twz = TencentWenZhi()
+  # twz.cutWordByCSVFile("./data/test_semi.csv", "./data/test_cutted.out")
+  an = BaiDuNlp()
+  an.cutWordByCSVFile("./data/test_semi.csv", "./data/test_cutted.out")
 
 if __name__ == '__main__':
   test()
