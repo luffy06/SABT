@@ -1,6 +1,7 @@
 #-*-coding:utf-8-*-
 import fileutil
 import csv
+from api import TencentWenZhi, JieBa
 
 def generateDic(filename):
   result = fileutil.readFileFromCSV(filename)
@@ -41,31 +42,31 @@ def getThemeDic():
     themes.add(r)
   return themes
 
-def addExternDic(sentimentdic, filename, anls):
+def addExternDic(sentimentDic, filename, anls):
   lines = fileutil.readFile(filename)
   for l in lines:
     l = l.strip("\n")
-    if l not in sentimentdic:
-      sentimentdic[l] = anls
-  return sentimentdic
+    if l not in sentimentDic:
+      sentimentDic[l] = anls
+  return sentimentDic
 
 def getSentimentDic() :
   filename = "./data/sentimentdic.in"
-  sentimentdic = {}
+  sentimentDic = {}
   rows = fileutil.readFile(filename)
   for row in rows:
     row = row.strip("\n")
     row = row.split(" ")
     word = row[0]
     sentiment = row[1]
-    if word not in sentimentdic:
-      sentimentdic[word] = sentiment
+    if word not in sentimentDic:
+      sentimentDic[word] = sentiment
 
   filenameExNe = "./data/ne.in"
   filenameExPo = "./data/po.in"
-  # sentimentdic = addExternDic(sentimentdic, filenameExNe, str(-1))
-  # sentimentdic = addExternDic(sentimentdic, filenameExPo, str(1))
-  return sentimentdic
+  # sentimentDic = addExternDic(sentimentDic, filenameExNe, str(-1))
+  # sentimentDic = addExternDic(sentimentDic, filenameExPo, str(1))
+  return sentimentDic
 
 def getChara(data, themeDic, sentimentDic, preDic):
   result = []
@@ -80,14 +81,25 @@ def getChara(data, themeDic, sentimentDic, preDic):
       result.append("O")
   return result
 
-def findAnsl(sw, sentimentdic):
-  if sw in sentimentdic:
-    return sentimentdic[sw]
-  else:
-    # todo
-    print("Not Found")
-    return '0'
 
+def getAnsl(text):
+  result = TencentWenZhi.getAnsl(text)
+  return result
+
+def findAnsl(text, sw, sentimentDic):
+  if sw in sentimentDic:
+    return sentimentDic[sw]
+  else:
+    return getAnsl(text)
+
+def preProcess(rawTestSetName):
+  testSetName = "./data/test_semi_cutted.out"
+  jb = JieBa()
+  jb.cutWordByCSVFile(rawTestSetName, testSetName)
+  rawdata = getTestData(testSetName)
+  themeDic = getThemeDic()
+  sentimentDic = getSentimentDic()
+  return (rawdata, themeDic, sentimentDic)
 
 def process(testSetName):
   punctuation = [',', '，', '.', '。', ':', '：', '!', '！', '?', '？', ';', '；', '、', '…']
@@ -95,9 +107,7 @@ def process(testSetName):
             '没什么', '无法', '不用', '不然', '非', '不会', '无', '未', '不怎么', '不够', '不算', '减少',
             '从不', '不再', '不让', '不见得', '省了', '不服', '不正', '不可', '没法', '不比']
 
-  rawdata = getTestData(testSetName)
-  themeDic = getThemeDic()
-  sentimentDic = getSentimentDic()
+  rawdata, themeDic, sentimentDic = preProcess(testSetName)
 
   result = []
   rowid = 0
@@ -117,7 +127,7 @@ def process(testSetName):
         found[i] = True
         targetTheme = "NULL"
         targetSentimentWord = data[i]
-        targetAnsl = findAnsl(targetSentimentWord, sentimentDic)
+        text = ""
 
         # check previous theme
         foundPre = False
@@ -128,7 +138,9 @@ def process(testSetName):
             foundPre = True
             found[j] = True
             targetTheme = data[j]
+            text = data[j] + text
             break
+          text = data[j] + text
         
         if foundPre == False:
           # check back theme
@@ -138,7 +150,11 @@ def process(testSetName):
             elif chara[j] == "TH" and found[j] == False:
               found[j] = True
               targetTheme = data[j]
+              text = text + data[j]
               break
+            text = text + data[j]
+
+        targetAnsl = findAnsl(text, targetSentimentWord, sentimentDic)
 
         foundPre = False
         step = 3
@@ -201,9 +217,8 @@ def showResult(filenamein, thmesw):
 def main():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
-  testSetName = "./data/result_semi.out"
   generateDic(trainingSetName)
-  res = process(testSetName)
+  res = process(rawTestSetName)
   showResult(rawTestSetName, res)
 
 if __name__ == '__main__':

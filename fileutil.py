@@ -35,12 +35,17 @@ def readFileFromCSV(filename):
   origindata = csv.reader(open(filename, encoding='utf-8'))
   result = []
   for od in origindata:
+    l = len(od)
     rowid = od[0]
     text = od[1].lower()
-    theme = od[2].lower().replace(" ", "")
-    word = od[3].lower().replace(" ", "")
-    anls = od[4]
-    if theme != "" and word != "":
+    theme = ""
+    word = ""
+    anls = ""
+    if l > 2:
+      theme = od[2].lower().replace(" ", "")
+      word = od[3].lower().replace(" ", "")
+      anls = od[4]
+    if text != "" and rowid != "":
       row = Row(rowid, text, theme, word, anls)
       result.append(row)
   return result
