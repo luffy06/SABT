@@ -49,7 +49,10 @@ class TencentWenZhi(object):
       print("error:" + text + " in LexicalCheck\nMessage:" + res['message'])
       return text
 
-  def cutWord(self, text):
+  def cutWord(self, text, times):
+    if times > 5:
+      jb = JieBa()
+      return jb.cutWord(text)
     action = "LexicalAnalysis"
     params = {
       'text': text,
@@ -63,8 +66,8 @@ class TencentWenZhi(object):
         result.append(r['word'])
       return result
     else:
-      print("error:" + text + "in LexicalAnalysis\nMessage:" + res['message'])
-      return []
+      # print("error:" + text + "in LexicalAnalysis\nMessage:" + res['message'])
+      return self.cutWord(text, times + 1)
 
 
   def cutWordByCSVFile(self, filenamein, filenameout):
