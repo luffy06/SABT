@@ -3,6 +3,9 @@ import fileutil
 import csv
 from api import TencentWenZhi, JieBa
 
+twz = TencentWenZhi()
+jb = JieBa()
+
 def generateDic(filename):
   result = fileutil.readFileFromCSV(filename)
 
@@ -83,7 +86,8 @@ def getChara(data, themeDic, sentimentDic, preDic):
 
 
 def getAnsl(text):
-  result = TencentWenZhi.getAnsl(text)
+  
+  result = twz.getAnsl(text)
   return result
 
 def findAnsl(text, sw, sentimentDic):
@@ -94,8 +98,9 @@ def findAnsl(text, sw, sentimentDic):
 
 def preProcess(rawTestSetName):
   testSetName = "./data/test_semi_cutted.out"
-  jb = JieBa()
   jb.cutWordByCSVFile(rawTestSetName, testSetName)
+  twz.cutWordByCSVFile(rawTestSetName, testSetName)
+
   rawdata = getTestData(testSetName)
   themeDic = getThemeDic()
   sentimentDic = getSentimentDic()
