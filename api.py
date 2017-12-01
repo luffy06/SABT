@@ -70,7 +70,6 @@ class TencentWenZhi(object):
         result.append(r['word'])
       return result
     else:
-      # print("error:" + text + "in LexicalAnalysis\nMessage:" + res['message'])
       return self.cutWord(text, times + 1, res['message'])
 
 
@@ -182,5 +181,7 @@ def test(method, filenamein, filenameout):
     th.cutWordByCSVFile(filenamein, filenameout)
 
 if __name__ == '__main__':
-  test(4, "./data/test_semi.csv", "./data/test_cutted.out")
+  filenamein = "./data/test_semi_fixed.csv"
+  filenameout = "./data/test_cutted.out"
+  test(2, filenamein, filenameout)
 

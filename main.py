@@ -81,10 +81,16 @@ def getSentimentDic() :
 
 def getPreDic():
   filename = "./data/predic.in"
-  rows = fileutil.readFile(filename)
+  constPreDic = ['没有', '不是', '别', '不', '不能', '不如', '不想', '没', '不敢', '本来', '不大', '不要',
+            '没什么', '无法', '不用', '不然', '非', '不会', '无', '未', '不怎么', '不够', '不算', '减少',
+            '从不', '不再', '不让', '不见得', '省了', '不服', '不正', '不可', '没法', '不比']
   pre = set([])
-  for r in rows:
-    r = r.strip("\n")
+  if fileutil.checkFileIfExist(filename):
+    rows = fileutil.readFile(filename)
+    for r in rows:
+      r = r.strip("\n")
+      pre.add(r)  
+  for r in constPreDic:
     pre.add(r)
   return pre
 
@@ -103,7 +109,6 @@ def getChara(data, themeDic, sentimentDic, preDic):
 
 
 def getAnsl(text):
-  
   result = twz.getAnsl(text)
   return result
 
@@ -115,15 +120,12 @@ def findAnsl(text, sw, sentimentDic):
 
 def preProcess(rawTestSetName):
   testSetName = "./data/test_semi_cutted.out"
-  jb.cutWordByCSVFile(rawTestSetName, testSetName)
+  # jb.cutWordByCSVFile(rawTestSetName, testSetName)
   # twz.cutWordByCSVFile(rawTestSetName, testSetName)
 
   rawdata = getTestData(testSetName)
   themeDic = getThemeDic()
   sentimentDic = getSentimentDic()
-  preDic = ['没有', '不是', '别', '不', '不能', '不如', '不想', '没', '不敢', '本来', '不大', '不要',
-            '没什么', '无法', '不用', '不然', '非', '不会', '无', '未', '不怎么', '不够', '不算', '减少',
-            '从不', '不再', '不让', '不见得', '省了', '不服', '不正', '不可', '没法', '不比']
   preDic = getPreDic()
   punctuation = [',', '，', '.', '。', ':', '：', '!', '！', '?', '？', ';', '；', '、', '…']
   return (rawdata, themeDic, sentimentDic, preDic, punctuation)
@@ -237,7 +239,7 @@ def showResult(filenamein, thmesw):
 
 
 def main():
-  trainingSetName = "./data/trainset_semi_fixed.csv"
+  trainingSetName = "./data/trainset_semi.csv"
   rawTestSetName = "./data/test_semi.csv"
   generateDic(trainingSetName)
   res = process(rawTestSetName)

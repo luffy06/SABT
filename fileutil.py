@@ -60,8 +60,11 @@ def writeCSV(filename, data):
   for d in data:
     writer.wirterow(d)
 
+def checkFileIfExist(filename):
+  return os.path.exists(filename)
+  
 def deleteFileIfExist(filename):
-  if os.path.exists(filename):
+  if checkFileIfExist(filename):
     os.remove(filename)
 
 if __name__ == '__main__':
