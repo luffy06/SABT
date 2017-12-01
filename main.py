@@ -99,7 +99,7 @@ def findAnsl(text, sw, sentimentDic):
 def preProcess(rawTestSetName):
   testSetName = "./data/test_semi_cutted.out"
   jb.cutWordByCSVFile(rawTestSetName, testSetName)
-  twz.cutWordByCSVFile(rawTestSetName, testSetName)
+  # twz.cutWordByCSVFile(rawTestSetName, testSetName)
 
   rawdata = getTestData(testSetName)
   themeDic = getThemeDic()
