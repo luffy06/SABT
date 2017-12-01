@@ -11,9 +11,11 @@ def generateDic(filename):
 
   themedDicName = "./data/themedic.in"
   sentimentDicName = "./data/sentimentdic.in"
+  preDicName = "./data/predic.in"
 
   fileutil.deleteFileIfExist(themedDicName)
   fileutil.deleteFileIfExist(sentimentDicName)
+  fileutil.deleteFileIfExist(preDicName)
 
   for r in result:
     sclist= r.sclist
@@ -22,6 +24,12 @@ def generateDic(filename):
       thtext = sc.theme.text
       swtext = sc.word.text
       anls = sc.anls
+      if r.text.find(swtext) == -1:
+        l = len(swtext)
+        for i in range(l):
+          if r.text.find(swtext[:l - i]) != -1:
+            fileutil.writeFile(preDicName, swtext[:l - i] + "\n")
+            break;
       fileutil.writeFile(themedDicName, thtext + "\n")
       fileutil.writeFile(sentimentDicName, swtext + " " + anls + "\n")
 
@@ -71,6 +79,15 @@ def getSentimentDic() :
   # sentimentDic = addExternDic(sentimentDic, filenameExPo, str(1))
   return sentimentDic
 
+def getPreDic():
+  filename = "./data/predic.in"
+  rows = fileutil.readFile(filename)
+  pre = set([])
+  for r in rows:
+    r = r.strip("\n")
+    pre.add(r)
+  return pre
+
 def getChara(data, themeDic, sentimentDic, preDic):
   result = []
   for d in data:
@@ -104,15 +121,15 @@ def preProcess(rawTestSetName):
   rawdata = getTestData(testSetName)
   themeDic = getThemeDic()
   sentimentDic = getSentimentDic()
-  return (rawdata, themeDic, sentimentDic)
-
-def process(testSetName):
-  punctuation = [',', '，', '.', '。', ':', '：', '!', '！', '?', '？', ';', '；', '、', '…']
   preDic = ['没有', '不是', '别', '不', '不能', '不如', '不想', '没', '不敢', '本来', '不大', '不要',
             '没什么', '无法', '不用', '不然', '非', '不会', '无', '未', '不怎么', '不够', '不算', '减少',
             '从不', '不再', '不让', '不见得', '省了', '不服', '不正', '不可', '没法', '不比']
+  preDic = getPreDic()
+  punctuation = [',', '，', '.', '。', ':', '：', '!', '！', '?', '？', ';', '；', '、', '…']
+  return (rawdata, themeDic, sentimentDic, preDic, punctuation)
 
-  rawdata, themeDic, sentimentDic = preProcess(testSetName)
+def process(testSetName):
+  rawdata, themeDic, sentimentDic, preDic, punctuation = preProcess(testSetName)
 
   result = []
   rowid = 0
