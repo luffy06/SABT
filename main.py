@@ -239,7 +239,7 @@ def showResult(filenamein, thmesw):
 
 
 def main():
-  trainingSetName = "./data/trainset_semi.csv"
+  trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
   generateDic(trainingSetName)
   res = process(rawTestSetName)

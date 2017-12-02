@@ -5,7 +5,18 @@ import thulac
 import fileutil
 import json
 
-class TencentWenZhi(object):
+class BaseAPI(object):
+  """docstring for BaseAPI"""
+  def __init__(self):
+    super(BaseAPI, self).__init__()
+
+  def showProcess(self, nowProcess, totalProcess):
+    percent = nowProcess * 100.0 / totalProcess
+    eachProcess = totalProcess / 10
+    if nowProcess % eachProcess == 0:
+      print(str(nowProcess) + "/" + str(totalProcess) + " " + str(percent) + "%")
+
+class TencentWenZhi(BaseAPI):
   """docstring for TencentWenZhi"""
   def __init__(self):
     super(TencentWenZhi, self).__init__()
@@ -77,15 +88,19 @@ class TencentWenZhi(object):
     rawdata = fileutil.readFileFromCSV(filenamein)
     fileutil.deleteFileIfExist(filenameout)
     result = ""
+    totalProcess = len(rawdata)
+    process = 0
     for rd in rawdata:
       text = rd.text
       res = self.cutWord(text, 0, "")
+      process = process + 1
+      self.showProcess(process, totalProcess)
       for r in res:
         result = result + r + " "
       result = result + "\n"
     fileutil.writeFile(filenameout, result)
 
-class JieBa(object):
+class JieBa(BaseAPI):
   """docstring for JieBa"""
   def __init__(self):
     super(JieBa, self).__init__()
@@ -98,15 +113,19 @@ class JieBa(object):
     rawdata = fileutil.readFileFromCSV(filenamein)
     fileutil.deleteFileIfExist(filenameout)
     result = ""
+    totalProcess = len(rawdata)
+    process = 0
     for rd in rawdata:
       text = rd.text
       res = self.cutWord(text)
+      process = process + 1
+      self.showProcess(process, totalProcess)
       for r in res:
         result = result + r + " "
       result = result + "\n"
     fileutil.writeFile(filenameout, result)
 
-class BaiDuNlp(object):
+class BaiDuNlp(BaseAPI):
   """docstring for BaiDuNlp"""
   def __init__(self):
     super(BaiDuNlp, self).__init__()
@@ -134,15 +153,19 @@ class BaiDuNlp(object):
     rawdata = fileutil.readFileFromCSV(filenamein)
     fileutil.deleteFileIfExist(filenameout)
     result = ""
+    totalProcess = len(rawdata)
+    process = 0
     for rd in rawdata:
       text = rd.text
       res = self.cutWord(text, 0, "")
+      process = process + 1
+      self.showProcess(process, totalProcess)
       for r in res:
         result = result + r + " "
       result = result + "\n"
     fileutil.writeFile(filenameout, result)
 
-class ThuLac(object):
+class ThuLac(BaseAPI):
   """docstring for ThuLac"""
   def __init__(self):
     super(ThuLac, self).__init__()
@@ -156,9 +179,13 @@ class ThuLac(object):
     rawdata = fileutil.readFileFromCSV(filenamein)
     fileutil.deleteFileIfExist(filenameout)
     result = ""
+    totalProcess = len(rawdata)
+    process = 0
     for rd in rawdata:
       text = rd.text
       res = self.cutWord(text)
+      process = process + 1
+      self.showProcess(process, totalProcess)
       for r in res:
         result = result + r[0] + " "
       result = result + "\n"
@@ -183,5 +210,5 @@ def test(method, filenamein, filenameout):
 if __name__ == '__main__':
   filenamein = "./data/test_semi_fixed.csv"
   filenameout = "./data/test_cutted.out"
-  test(2, filenamein, filenameout)
+  test(3, filenamein, filenameout)
 
