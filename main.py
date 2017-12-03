@@ -35,6 +35,30 @@ def writeWordVector(label, sentence, dic):
     X[index] = 1  
   return (X, label, dic)
 
+def generateVector(th, sw, textlist, length, window):
+  tlen = th.textlen
+  slen = sw.textlen
+  st = 0
+  ed = 0
+  res = False
+  if th.begin == -1:
+    st, ed, res = getWindow(sw.begin, sw.begin + slen - 1, length, window)
+  else:
+    begin = min(sw.begin, th.begin)
+    end = max(sw.begin, th.begin)
+    if sw.begin > th.begin:
+      end = end + slen - 1
+    else:
+      end = end + tlen - 1
+    st, ed, res = getWindow(begin, end, length, window)
+  if res == False:
+    for i in  range(window - (end - begin + 1)):
+      vec.append("DEFAULF")
+  for i in range(begin, end + 1):
+    vec.append(textlist[i])
+  return vec
+
+
 def preProcess(trainingSetName):
   result = fileutil.readFileFromCSV(trainingSetName)
   getCRF(result)
@@ -44,36 +68,30 @@ def preProcess(trainingSetName):
   Y = []
   wordDic = {}
   for r in result:
-    length = r.textlen
     for sc in r.sclist:
-      vec = []
-      label = 1
-      th = sc.theme
-      tlen = sc.theme.textlen
-      sw = sc.word
-      slen = sc.word.textlen
-      st = 0
-      ed = 0
-      res = False
-      if th.begin == -1:
-        st, ed, res = getWindow(sw.begin, sw.begin + slen - 1, length, window)
-      else:
-        begin = min(sw.begin, th.begin)
-        end = max(sw.begin, th.begin)
-        if sw.begin > th.begin:
-          end = end + slen - 1
-        else:
-          end = end + tlen - 1
-        st, ed, res = getWindow(begin, end, length, window)
-      if res == False:
-        for i in  range(window - (end - begin + 1)):
-          vec.append("DEFAULF")
-      for i in range(begin, end + 1):
-        vec.append(r.textlist[i])
-      x, y, wordDic = getWordVector(label, vec, wordDic)
+      vec = generateVector(sc.theme, sc.word, r.textlist, r.textlen, window)
+      x, y, wordDic = getWordVector(1, vec, wordDic)
       X.append(x)
       Y.append(y)
 
+  for r in result:
+    for i, sci in enumerate(r.sclist):
+      for j, scj in enumerate(r.sclist):
+        if i == j:
+          continue
+        th = sci.theme
+        sw = scj.word
+        if th.begin != -1:
+          length = 0
+          if th.begin > sw.begin:
+            length = th.begin - sw.begin + th.textlen
+          else:
+            length = sw.begin - th.begin + sw.textlen
+          if length <= 10:
+            vec = generateVector(th, sw, r.textlist, r.textlen, window)
+            x, y, wordDic = getWordVector(0, vec, wordDic)
+            X.append(x)
+            Y.append(y)
 
 
 
