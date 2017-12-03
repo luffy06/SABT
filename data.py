@@ -1,7 +1,6 @@
 #-*-coding:utf-8-*-
 import copy
 import re
-from api import TencentWenZhi
 
 class Word(object):
   def __init__(self, text, begin):
@@ -21,6 +20,7 @@ class Row(object):
   def __init__(self, rowid, text, theme, word, anls):
     self.rowid = rowid
     self.text = text
+    self.textlist = []
     self.parse(theme, word, anls)
     self.crf()
 
@@ -37,11 +37,10 @@ class Row(object):
         a = alist[i]
 
         wb = self.text.find(w)
+        tb = self.text.find(t)
 
         if wb != -1 and t != "" and w != "" and a != "":
-          # t = TencentWenZhi.fixWrongWord(t)
-          # w = TencentWenZhi.fixWrongWord(w)
-          sc = SentimentCell(Word(t, -1), Word(w, -1), a)
+          sc = SentimentCell(Word(t, tb), Word(w, wb), a)
           self.sclist.append(sc)
     else:
       print("Length is not matched!!!!!" + str(self.rowid) + " theme:" + theme + " word:" + word + " anls:" + anls)
