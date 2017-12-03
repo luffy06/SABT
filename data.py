@@ -2,6 +2,17 @@
 import copy
 import re
 
+def getNextNumber(text, begin):
+  isEnglish = False
+  for i in range(begin, len(text)):
+    if (text[i] >= 'A' and text[i] <= 'Z') or (text[i] >= 'a' and text[i] <= 'z'):
+      isEnglish = True
+    else:
+      if isEnglish == True:
+        return i
+  return 0
+
+
 class Word(object):
   def __init__(self, text, begin):
     self.text = text
@@ -86,3 +97,4 @@ class Row(object):
           self.position[tb] = "B"
           self.position[tb + tlen - 1] = "E"
         pos = tb + tlen
+
