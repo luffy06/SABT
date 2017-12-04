@@ -23,7 +23,7 @@ def getWindow(begin, end, length, window):
     return (0, window - 1, True)
   return (0, length - 1, False)
 
-def getWordVector(label, sentence, dic):
+def getWordVector(sentence, dic):
   X = {}
   count = len(dic) + 1
   length = len(sentence)
@@ -34,9 +34,9 @@ def getWordVector(label, sentence, dic):
       count = count + 1
     index = dic[wordLoc]
     X[index] = 1  
-  return (X, label, dic)
+  return (X, dic)
 
-def getTestVector(label, sentence, dic):
+def getTestVector(sentence, dic):
   X = {}
 
   length = len(sentence)
@@ -46,7 +46,7 @@ def getTestVector(label, sentence, dic):
       dic[wordLoc] = 0
     index = dic[wordLoc]
     X[index] = 1  
-  return (X, label, dic)
+  return (X, dic)
 
 def generateVector(th, sw, textlist, length, window):
   tlen = th.textlen
@@ -123,8 +123,10 @@ def crfToRaw():
   return rowList
 
 def preProcess(trainingSetName):
-  trainingSetNameSVM = "./data/trainset_semi_svm.in"
+  trainingSetNameSVM = "./data/svm/trainset_semi_svm.in"
+  trainingSetLabelNameSVM = "./data/svm/trainset_semi_label_svm.in"
   fileutil.deleteFileIfExist(trainingSetNameSVM)
+  fileutil.deleteFileIfExist(trainingSetLabelNameSVM)
 
   result = fileutil.readFileFromCSV(trainingSetName)
   # getCRF(result)
@@ -135,11 +137,16 @@ def preProcess(trainingSetName):
   for r in result:
     for sc in r.sclist:
       vec = generateVector(sc.theme, sc.word, r.textlist, r.textlen, window)
-      x, y, wordDic = getWordVector(1, vec, wordDic)
+      x, wordDic = getWordVector(vec, wordDic)
+      y = 1
       line = str(y)
       for i in x:
         line = line + " "  + str(i) + ":" + str(x[i])
       fileutil.writeFile(trainingSetNameSVM, line + "\n")
+      line = str(sc.anls)
+      for i in x:
+        line = line + " "  + str(i) + ":" + str(x[i])
+      fileutil.writeFile(trainingSetLabelNameSVM, line + "\n")
 
   for r in result:
     for i, sci in enumerate(r.sclist):
@@ -156,7 +163,8 @@ def preProcess(trainingSetName):
             length = sw.begin - th.begin + sw.textlen
           if length <= window:
             vec = generateVector(th, sw, r.textlist, r.textlen, window)
-            x, y, wordDic = getWordVector(0, vec, wordDic)
+            x, wordDic = getWordVector(vec, wordDic)
+            y = 0
             line = str(y)
             for xi in x:
               line = line + " "  + str(xi) + ":" + str(x[xi])
@@ -168,7 +176,8 @@ def preProcess(trainingSetName):
 def main():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
-  testSetNameSVM = "./data/test_semi_svm.in"
+  testSetNameSVM = "./data/svm/test_semi_svm.in"
+  testSetLabelNameSVM = "./data/svm/test_semi_label_svm.in"
   wordDic = preProcess(trainingSetName)
   testList = fileutil.readFileFromCSV(rawTestSetName)
   rowList = crfToRaw()
@@ -191,11 +200,13 @@ def main():
         if i + 1 < length and l[i + 1][2] == "TH":
           vecList.append(generateVector(Word(d[0], d[1]), Word(l[i + 1][0], l[i + 1][1]), testList[rowid].textlist, testList[rowid].textlen, window))
       for v in vecList:
-        x, y, wordDic = getTestVector(1, v, wordDic)
+        x, wordDic = getTestVector(v, wordDic)
+        y = 1
         line = str(y)
         for j in x:
           line = line + " " + str(j) + ":" + str(x[j])
         fileutil.writeFile(testSetNameSVM, line + "\n")
+        fileutil.writeFile(testSetLabelNameSVM, line + "\n")
 
 
 def test():
