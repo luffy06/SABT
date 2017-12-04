@@ -1,7 +1,7 @@
 #-*-coding:utf-8-*-
 import copy
 import re
-# from api import TencentWenZhi
+from api import TencentWenZhi
 
 class Word(object):
   def __init__(self, text, begin):
@@ -20,7 +20,7 @@ class Row(object):
 
   def __init__(self, rowid, text, theme, word, anls):
     self.rowid = rowid
-    self.text = text
+    self.text = text.replace(" ", "，")
     self.parse(theme, word, anls)
 
   def parse(self, theme, word, anls):

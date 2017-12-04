@@ -1,10 +1,10 @@
 #-*-coding:utf-8-*-
 import fileutil
 import csv
-# from api import TencentWenZhi, JieBa
+from api import TencentWenZhi, JieBa
 
-# twz = TencentWenZhi()
-# jb = JieBa()
+twz = TencentWenZhi()
+jb = JieBa()
 
 def generateDic(filename):
   result = fileutil.readFileFromCSV(filename)
@@ -134,7 +134,7 @@ def findAnsl(text, sw, sentimentDic):
 
 def preProcess(rawTestSetName):
   testSetName = "./data/test_semi_cutted.out"
-  # jb.cutWordByCSVFile(rawTestSetName, testSetName)
+  jb.cutWordByCSVFile(rawTestSetName, testSetName)
   # twz.cutWordByCSVFile(rawTestSetName, testSetName)
 
   rawdata = getTestData(testSetName)
@@ -270,7 +270,7 @@ def showResult(filenamein, thmesw):
 
 def main():
   trainingSetName = "./data/trainset_semi_fixed.csv"
-  rawTestSetName = "./data/test_semi.csv"
+  rawTestSetName = "./data/test_semi_fixed.csv"
   generateDic(trainingSetName)
   res = process(rawTestSetName)
   showResult(rawTestSetName, res)
