@@ -58,41 +58,6 @@ def generateVector(th, sw, textlist, length, window):
     vec.append(textlist[i])
   return vec
 
-
-def preProcess(trainingSetName):
-  result = fileutil.readFileFromCSV(trainingSetName)
-  getCRF(result)
-
-  window = 10
-  X = []
-  Y = []
-  wordDic = {}
-  for r in result:
-    for sc in r.sclist:
-      vec = generateVector(sc.theme, sc.word, r.textlist, r.textlen, window)
-      x, y, wordDic = getWordVector(1, vec, wordDic)
-      X.append(x)
-      Y.append(y)
-
-  for r in result:
-    for i, sci in enumerate(r.sclist):
-      for j, scj in enumerate(r.sclist):
-        if i == j:
-          continue
-        th = sci.theme
-        sw = scj.word
-        if th.begin != -1:
-          length = 0
-          if th.begin > sw.begin:
-            length = th.begin - sw.begin + th.textlen
-          else:
-            length = sw.begin - th.begin + sw.textlen
-          if length <= 10:
-            vec = generateVector(th, sw, r.textlist, r.textlen, window)
-            x, y, wordDic = getWordVector(0, vec, wordDic)
-            X.append(x)
-            Y.append(y)
-
 def getTS(begin, lines):
   TS = ''
   print(lines)
@@ -147,6 +112,39 @@ def crfToRaw():
   for row in rowList:
     print(row)
 
+def preProcess(trainingSetName):
+  result = fileutil.readFileFromCSV(trainingSetName)
+  getCRF(result)
+
+  window = 10
+  X = []
+  Y = []
+  wordDic = {}
+  for r in result:
+    for sc in r.sclist:
+      vec = generateVector(sc.theme, sc.word, r.textlist, r.textlen, window)
+      x, y, wordDic = getWordVector(1, vec, wordDic)
+      X.append(x)
+      Y.append(y)
+
+  for r in result:
+    for i, sci in enumerate(r.sclist):
+      for j, scj in enumerate(r.sclist):
+        if i == j:
+          continue
+        th = sci.theme
+        sw = scj.word
+        if th.begin != -1:
+          length = 0
+          if th.begin > sw.begin:
+            length = th.begin - sw.begin + th.textlen
+          else:
+            length = sw.begin - th.begin + sw.textlen
+          if length <= 10:
+            vec = generateVector(th, sw, r.textlist, r.textlen, window)
+            x, y, wordDic = getWordVector(0, vec, wordDic)
+            X.append(x)
+            Y.append(y)
 
 def main():
   trainingSetName = "./data/trainset_semi_fixed.csv"
