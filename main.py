@@ -12,6 +12,7 @@ def generateDic(filename):
   themedDicName = "./data/themedic.in"
   sentimentDicName = "./data/sentimentdic.in"
   preDicName = "./data/predic.in"
+  degreeDicName = "./data/degree.in"
 
   fileutil.deleteFileIfExist(themedDicName)
   fileutil.deleteFileIfExist(sentimentDicName)
@@ -94,9 +95,21 @@ def getPreDic():
     pre.add(r)
   return pre
 
-def getChara(data, themeDic, sentimentDic, preDic):
+def getDegreeDic():
+  filename = "./data/degree.in"
+  degree = set([])
+  if fileutil.checkFileIfExist(filename):
+    rows = fileutil.readFile(filename)
+    for r in rows:
+      r = r.strip("\n")
+      pre.add(r)  
+  return degree
+
+def getChara(data, themeDic, sentimentDic, preDic, degreeDic):
   result = []
   for d in data:
+    if d in degreeDic:
+      result.append("DE")
     if d in preDic:
       result.append("PR")
     elif d in themeDic:
@@ -127,8 +140,9 @@ def preProcess(rawTestSetName):
   themeDic = getThemeDic()
   sentimentDic = getSentimentDic()
   preDic = getPreDic()
+  degreeDic = getDegreeDic()
   punctuation = [',', '，', '.', '。', ':', '：', '!', '！', '?', '？', ';', '；', '、', '…']
-  return (rawdata, themeDic, sentimentDic, preDic, punctuation)
+  return (rawdata, themeDic, sentimentDic, preDic, degreeDic, punctuation)
 
 def process(testSetName):
   rawdata, themeDic, sentimentDic, preDic, punctuation = preProcess(testSetName)
@@ -144,7 +158,7 @@ def process(testSetName):
     for i in range(length):
       found.append(False)
 
-    chara = getChara(data, themeDic, sentimentDic, preDic)
+    chara = getChara(data, themeDic, sentimentDic, preDic, degreeDic)
 
     for i in range(length-1, -1, -1):
       if chara[i] == 'SW' and found[i] == False:
@@ -179,6 +193,21 @@ def process(testSetName):
             text = text + data[j]
 
         targetAnsl = findAnsl(text, targetSentimentWord, sentimentDic)
+
+        # find degree word
+        # foundPre = False
+        step = 1
+        st = i - 1
+        ed = max(st - step, -1)
+        for j in range(st, ed, -1):
+          if data[j] in punctuation or chara[j] == "SW":
+            break
+          elif chara[j] == "DE" and found[j] == False:
+            # foundPre = True
+            found[j] = True
+            targetAnsl = -int(targetAnsl)
+            targetSentimentWord = data[j] + targetSentimentWord
+            break
 
         foundPre = False
         step = 3
