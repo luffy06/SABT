@@ -1,10 +1,10 @@
 #-*-coding:utf-8-*-
 import fileutil
 import csv
-from api import TencentWenZhi, JieBa
+# from api import TencentWenZhi, JieBa
 
-twz = TencentWenZhi()
-jb = JieBa()
+# twz = TencentWenZhi()
+# jb = JieBa()
 
 def generateDic(filename):
   result = fileutil.readFileFromCSV(filename)
@@ -102,27 +102,28 @@ def getDegreeDic():
     rows = fileutil.readFile(filename)
     for r in rows:
       r = r.strip("\n")
-      pre.add(r)  
+      degree.add(r)  
   return degree
 
 def getChara(data, themeDic, sentimentDic, preDic, degreeDic):
   result = []
   for d in data:
-    if d in degreeDic:
-      result.append("DE")
     if d in preDic:
       result.append("PR")
     elif d in themeDic:
       result.append("TH")
     elif d in sentimentDic:
       result.append("SW")
+    elif d in degreeDic:
+      result.append("DE")
     else:
       result.append("O")
   return result
 
 
 def getAnsl(text):
-  result = twz.getAnsl(text)
+  # result = twz.getAnsl(text)
+  result = "0"
   return result
 
 def findAnsl(text, sw, sentimentDic):
@@ -145,7 +146,7 @@ def preProcess(rawTestSetName):
   return (rawdata, themeDic, sentimentDic, preDic, degreeDic, punctuation)
 
 def process(testSetName):
-  rawdata, themeDic, sentimentDic, preDic, punctuation = preProcess(testSetName)
+  rawdata, themeDic, sentimentDic, preDic, degreeDic, punctuation = preProcess(testSetName)
 
   result = []
   rowid = 0
@@ -205,7 +206,7 @@ def process(testSetName):
           elif chara[j] == "DE" and found[j] == False:
             # foundPre = True
             found[j] = True
-            targetAnsl = -int(targetAnsl)
+            # targetAnsl = int(targetAnsl)
             targetSentimentWord = data[j] + targetSentimentWord
             break
 

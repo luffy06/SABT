@@ -1,7 +1,7 @@
 #-*-coding:utf-8-*-
 import copy
 import re
-from api import TencentWenZhi
+# from api import TencentWenZhi
 
 class Word(object):
   def __init__(self, text, begin):
