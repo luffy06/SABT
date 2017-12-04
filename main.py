@@ -93,6 +93,59 @@ def preProcess(trainingSetName):
             X.append(x)
             Y.append(y)
 
+def getTS(begin, lines):
+  TS = ''
+  print(lines)
+  for i in range(begin, len(lines)):
+    lines[i] = lines[i].strip('\n')
+    lines[i] = lines[i].split(' ')
+    charact = lines[0]
+    crfTag = lines[1]
+    crfTag =  crfTag.split('-')
+    loc = crfTag[0]
+    if loc != 'E':
+      TS += charact
+    else:
+      return (i, TS)
+
+def rowProcess(rowid, lines):
+  copyLines = lines
+  begin = 0
+  themelist = []
+  swlist = []
+  # print(len(lines))
+  for i in range(begin, len(lines)):
+    lines[i] = lines[i].strip('\n')
+    lines[i] = lines[i].split(' ')
+    charact,crfTag = (lines[i][0],lines[i][1])
+    print(charact + " " + crfTag)
+    print(i)
+    crfTag =  crfTag.split('-')
+    tag = crfTag[1]
+    if tag == 'T':
+      begin, theme = getTS(i, copyLines)
+      themelist.append((theme, i))
+    if tag == 'S':
+      begin, sw = getTS(i, copyLines)
+      swlist.append((sw, i))
+
+  return (rowid, themelist, swlist)
+
+
+def crfToRaw():
+  filename = '/Users/apple/Desktop/test.data'
+  rowList = []
+  rowid = 1
+  begin = 0
+  result = fileutil.readFile(filename)
+  for i in range(begin, len(result)):
+    if result[i] == '\n':
+      rowList.append(rowProcess(rowid, result[begin:i]))
+      begin = i + 1
+      rowid += 1
+
+  for row in rowList:
+    print(row)
 
 
 def main():
@@ -112,5 +165,6 @@ def test():
     fileutil.writeFile(outputName, "\n")
 
 if __name__ == '__main__':
-  test()
+  # test()
+  crfToRaw()
   # main()
