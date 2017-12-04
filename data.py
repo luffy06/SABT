@@ -57,6 +57,9 @@ def parseText(text):
     else:
       res.append(text[i])
       i = i + 1
+  res = []
+  for j in text:
+    res.append(j)
   return res
 
 def getStartPos(begin, textlist):
@@ -94,7 +97,7 @@ class Row(object):
     self.rowid = rowid
     self.text = text.replace(" ", "，")
     self.textlist = parseText(self.text)
-    self.textlen = len(self.textlist)
+    self.textlen = len(self.text)
     self.parse(theme, word, anls)
     self.crf()
 
@@ -110,8 +113,10 @@ class Row(object):
         w = wlist[i]
         a = alist[i]
 
-        wb = getStartPos(self.text.find(w), self.textlist)
-        tb = getStartPos(self.text.find(t), self.textlist)
+        # wb = getStartPos(self.text.find(w), self.textlist)
+        # tb = getStartPos(self.text.find(t), self.textlist)
+        wb = self.text.find(w)
+        tb = self.text.find(t)
 
         if wb != -1 and t != "" and w != "" and a != "":
           sc = SentimentCell(Word(t, tb), Word(w, wb), a)

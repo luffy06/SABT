@@ -169,21 +169,38 @@ def main():
     l.sort(key=lambda x: x[1])
     length = len(l)
     for i, d in enumerate(l):
+      vecList = []
       if i > 0 and i < length - 1:
         if d[2] == "TH":
           if l[i - 1][2] == "SW":
-            vec = generateVector(Word(d[0], d[1]), Word(line[i - 1][0], line[i - 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window)
+            vecList.append(generateVector(Word(d[0], d[1]), Word(line[i - 1][0], line[i - 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window))
 
           if l[i + 1][2] == "SW":
-            vec = generateVector(Word(d[0], d[1]), Word(line[i + 1][0], line[i + 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window)
+            vecList.append(generateVector(Word(d[0], d[1]), Word(line[i + 1][0], line[i + 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window))
         elif d[2] == "SW":
-          pass
+          if l[i - 1][2] == "TH":
+            vecList.append(generateVector(Word(d[0], d[1]), Word(line[i - 1][0], line[i - 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window))
+          if l[i + 1][2] == "TH"
+            vecList.append(generateVector(Word(d[0], d[1]), Word(line[i + 1][0], line[i + 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window))
         else:
           print("Error Label")
       elif i == 0:
-        pass
+        if d[2] == "TH" and l[i + 1][2] == "SW":
+            vecList.append(generateVector(Word(d[0], d[1]), Word(line[i + 1][0], line[i + 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window))
+        elif d[2] == "SW" and l[i + 1][2] == "TH"
+            vecList.append(generateVector(Word(d[0], d[1]), Word(line[i + 1][0], line[i + 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window))
+        else:
+          print("Error Label")
       else:
-        pass
+        if d[2] == "TH" and l[i - 1][2] == "SW":
+            vecList.append(generateVector(Word(d[0], d[1]), Word(line[i - 1][0], line[i - 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window))
+
+        elif d[2] == "SW" and l[i - 1][2] == "TH":
+            vecList.append(generateVector(Word(d[0], d[1]), Word(line[i - 1][0], line[i - 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window))
+        else:
+          print("Error Label")
+      for v in vecList:
+        
 
 
 def test():
@@ -197,16 +214,7 @@ def test():
 
   fileutil.deleteFileIfExist(trainsetOutputName)
   for r in trainset:
-    fileutil.writeFile(trainsetOutputName, r.rowid + "," + r.text + ",")
-    for sc in r.sclist:
-      fileutil.writeFile(trainsetOutputName, sc.theme.text + ";")
-    fileutil.writeFile(trainsetOutputName, ",")
-    for sc in r.sclist:
-      fileutil.writeFile(trainsetOutputName, sc.word.text + ";")
-    fileutil.writeFile(trainsetOutputName, ",")
-    for sc in r.sclist:
-      fileutil.writeFile(trainsetOutputName, str(sc.anls) + ";")
-    fileutil.writeFile(trainsetOutputName, "\n")
+    fileutil.writeFile(trainsetOutputName, r.text + "\n")
 
 
   test = fileutil.readFileFromCSV(rawTestSetName)
@@ -218,7 +226,7 @@ def test():
 
   fileutil.deleteFileIfExist(testFixedOutputName)
   for r in test:
-    fileutil.writeFile(testFixedOutputName, r.rowid + "," + r.text + "\n")
+    fileutil.writeFile(testFixedOutputName, r.text + "\n")
 
 if __name__ == '__main__':
   test()
