@@ -59,6 +59,20 @@ def parseText(text):
       i = i + 1
   return res
 
+def getStartPos(begin, textlist):
+  if begin == -1:
+    return -1
+  l = 0
+  for i, ti in enumerate(textlist):
+    if l >= begin:
+      if l == begin:
+        return i
+      else:
+        print("Error")
+    l = l + len(ti)
+  print("Error 2")
+  return -1
+
 class Word(object):
   def __init__(self, text, begin):
     self.text = text
@@ -96,8 +110,8 @@ class Row(object):
         w = wlist[i]
         a = alist[i]
 
-        wb = self.text.find(w)
-        tb = self.text.find(t)
+        wb = getStartPos(self.text.find(w), self.textlist)
+        tb = getStartPos(self.text.find(t), self.textlist)
 
         if wb != -1 and t != "" and w != "" and a != "":
           sc = SentimentCell(Word(t, tb), Word(w, wb), a)
