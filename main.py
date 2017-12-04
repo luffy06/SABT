@@ -36,6 +36,18 @@ def getWordVector(label, sentence, dic):
     X[index] = 1  
   return (X, label, dic)
 
+def generateTestVector(label, sentence, dic):
+  X = {}
+
+  length = len(sentence)
+  for i in range(length):
+    wordLoc = (sentence[i], i+1)
+    if wordLoc not in dic:
+      dic[wordLoc] = 0
+    index = dic[wordLoc]
+    X[index] = 1  
+  return (X, label)
+
 def generateVector(th, sw, textlist, length, window):
   tlen = th.textlen
   slen = sw.textlen
