@@ -1,10 +1,11 @@
 #-*-coding:utf-8-*-
 #!/usr/bin/python3
 import fileutil
+from data import Word
 # CRF
 
 def getCRF(data):
-  crfFileName = "./data/crf.out"
+  crfFileName = "./data/crf/crf.out"
   fileutil.deleteFileIfExist(crfFileName)
   for r in data:
     j = 0
@@ -61,7 +62,7 @@ def generateVector(th, sw, textlist, length, window):
 
 def parseCRF(line):
   line = line.strip('\n')
-  ls = line.split(' ')
+  ls = line.split('\t')
   sp = ls[1].split('-')
   return (ls[0], sp[0], sp[1])
 
@@ -94,7 +95,6 @@ def rowProcess(rowid, lines):
       i = i + 1
   return (rowid, themelist, swlist)
 
-
 def crfToRaw():
   filename = './data/crf_test.in'
   rowList = []
@@ -105,10 +105,7 @@ def crfToRaw():
     if r == '\n' or i == len(result) - 1:
       rowList.append(rowProcess(rowid, result[begin:i]))
       begin = i + 1
-      rowid = rowid + 1
-  
-  for row in rowList:
-    print(row)
+      rowid = rowid + 1  
   return rowList
 
 def preProcess(trainingSetName):
@@ -157,20 +154,72 @@ def preProcess(trainingSetName):
 def main():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
-  wordDic = preProcess(trainingSetName)
+  # wordDic = preProcess(trainingSetName)
+  testList = fileutil.readFileFromCSV(rawTestSetName)
   rowList = crfToRaw()
+  print(len(rowList))
+  assert len(rowList) == len(textlist)
+  window = 10
+  for r in rowList:
+    l = []
+    for th in r[1]:
+      l.append((th[0], th[1], "TH"))
+    for sw in r[2]:
+      l.append((sw[0], sw[1], "SW"))
+    l.sort(key=lambda x: x[1])
+    length = len(l)
+    for i, d in enumerate(l):
+      if i > 0 and i < length - 1:
+        if d[2] == "TH":
+          if l[i - 1][2] == "SW":
+            vec = generateVector(Word(d[0], d[1]), Word(line[i - 1][0], line[i - 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window)
+
+          if l[i + 1][2] == "SW":
+            vec = generateVector(Word(d[0], d[1]), Word(line[i + 1][0], line[i + 1][1]), testList[r.rowid].textlist, testList[r.rowid].textlen, window)
+        elif d[2] == "SW":
+          pass
+        else:
+          print("Error Label")
+      elif i == 0:
+        pass
+      else:
+        pass
+
 
 def test():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
-  outputName = "./testset_onewordline_text.out"
-  result = fileutil.readFileFromCSV(rawTestSetName)
-  fileutil.deleteFileIfExist(outputName)
-  for r in result:
+  trainsetOutputName = "./data/crf/trainset_fixed.out"
+  testOutputName = "./data/crf/testset_onewordline_text.out"
+  testFixedOutputName = "./data/crf/test_fixed.out"
+  trainset = fileutil.readFileFromCSV(trainingSetName)
+  getCRF(trainset)
+
+  fileutil.deleteFileIfExist(trainsetOutputName)
+  for r in trainset:
+    fileutil.writeFile(trainsetOutputName, r.rowid + "," + r.text + ",")
+    for sc in r.sclist:
+      fileutil.writeFile(trainsetOutputName, sc.theme.text + ";")
+    fileutil.writeFile(trainsetOutputName, ",")
+    for sc in r.sclist:
+      fileutil.writeFile(trainsetOutputName, sc.word.text + ";")
+    fileutil.writeFile(trainsetOutputName, ",")
+    for sc in r.sclist:
+      fileutil.writeFile(trainsetOutputName, str(sc.anls) + ";")
+    fileutil.writeFile(trainsetOutputName, "\n")
+
+
+  test = fileutil.readFileFromCSV(rawTestSetName)
+  fileutil.deleteFileIfExist(testOutputName)
+  for r in test:
     for w in r.text:
-      fileutil.writeFile(outputName, w + "\n")
-    fileutil.writeFile(outputName, "\n")
+      fileutil.writeFile(testOutputName, w + "\n")
+    fileutil.writeFile(testOutputName, "\n")
+
+  fileutil.deleteFileIfExist(testFixedOutputName)
+  for r in test:
+    fileutil.writeFile(testFixedOutputName, r.rowid + "," + r.text + "\n")
 
 if __name__ == '__main__':
-  # test()
-  main()
+  test()
+  # main()
