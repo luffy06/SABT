@@ -35,7 +35,7 @@ def getWordVector(label, sentence, dic):
     X[index] = 1  
   return (X, label, dic)
 
-def generateTestVector(label, sentence, dic):
+def generateTestWordVector(label, sentence, dic):
   X = {}
 
   length = len(sentence)
