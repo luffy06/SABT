@@ -59,59 +59,57 @@ def generateVector(th, sw, textlist, length, window):
     vec.append(textlist[i])
   return vec
 
+def parseCRF(line):
+  line = line.strip('\n')
+  ls = line.split(' ')
+  sp = ls[1].split('-')
+  return (ls[0], sp[0], sp[1])
+
 def getTS(begin, lines):
   TS = ''
-  print(lines)
-  for i in range(begin, len(lines)):
-    lines[i] = lines[i].strip('\n')
-    lines[i] = lines[i].split(' ')
-    charact = lines[0]
-    crfTag = lines[1]
-    crfTag =  crfTag.split('-')
-    loc = crfTag[0]
-    if loc != 'E':
-      TS += charact
-    else:
-      return (i, TS)
+  length = len(lines)
+  end = length
+  for i in range(begin, length):
+    l = parseCRF(lines[i])
+    TS = TS + l[0]
+    if l[1] == 'E' or l[1] == 'S':
+      return (i + 1, TS)
+  return (length, TS)
 
 def rowProcess(rowid, lines):
-  copyLines = lines
-  begin = 0
   themelist = []
   swlist = []
-  # print(len(lines))
-  for i in range(begin, len(lines)):
-    lines[i] = lines[i].strip('\n')
-    lines[i] = lines[i].split(' ')
-    charact,crfTag = (lines[i][0],lines[i][1])
-    print(charact + " " + crfTag)
-    print(i)
-    crfTag =  crfTag.split('-')
-    tag = crfTag[1]
-    if tag == 'T':
-      begin, theme = getTS(i, copyLines)
+  length = len(lines)
+  i = 0
+  while i < length:
+    l = parseCRF(lines[i])
+    charact, crfTag = (l[0], l[2])
+    if crfTag == 'T':
+      i, theme = getTS(i, lines)
       themelist.append((theme, i))
-    if tag == 'S':
-      begin, sw = getTS(i, copyLines)
+    elif crfTag == 'S':
+      i, sw = getTS(i, lines)
       swlist.append((sw, i))
-
+    else:
+      i = i + 1
   return (rowid, themelist, swlist)
 
 
 def crfToRaw():
-  filename = '/Users/apple/Desktop/test.data'
+  filename = './data/crf_test.in'
   rowList = []
   rowid = 1
   begin = 0
   result = fileutil.readFile(filename)
-  for i in range(begin, len(result)):
-    if result[i] == '\n':
+  for i, r in enumerate(result):
+    if r == '\n' or i == len(result) - 1:
       rowList.append(rowProcess(rowid, result[begin:i]))
       begin = i + 1
-      rowid += 1
-
+      rowid = rowid + 1
+  
   for row in rowList:
     print(row)
+  return rowList
 
 def preProcess(trainingSetName):
   trainingSetNameSVM = "./data/trainset_semi_svm.in"
@@ -160,7 +158,7 @@ def main():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
   wordDic = preProcess(trainingSetName)
-  
+  rowList = crfToRaw()
 
 def test():
   trainingSetName = "./data/trainset_semi_fixed.csv"
@@ -175,5 +173,4 @@ def test():
 
 if __name__ == '__main__':
   # test()
-  crfToRaw()
   main()
