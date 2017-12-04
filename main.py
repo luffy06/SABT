@@ -43,7 +43,6 @@ def getWordVector(sentence, dic):
 
 def getTestVector(sentence, dic):
   X = {}
-
   length = len(sentence)
   for i in range(length):
     wordLoc = (sentence[i], i+1)
@@ -187,6 +186,8 @@ def main():
   wordDic = preProcess(trainingSetName)
   testList = fileutil.readFileFromCSV(rawTestSetName)
   rowList = crfToRaw()
+  fileutil.deleteFileIfExist(testSetNameSVM)
+  fileutil.deleteFileIfExist(testSetLabelNameSVM)
   assert len(rowList) == len(testList)
   window = 10
   for r in rowList:
