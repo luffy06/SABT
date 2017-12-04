@@ -110,12 +110,12 @@ def getChara(data, themeDic, sentimentDic, preDic, degreeDic):
   for d in data:
     if d in preDic:
       result.append("PR")
+    elif d in degreeDic:
+      result.append("DE")
     elif d in themeDic:
       result.append("TH")
     elif d in sentimentDic:
       result.append("SW")
-    elif d in degreeDic:
-      result.append("DE")
     else:
       result.append("O")
   return result
