@@ -23,6 +23,10 @@ def getWindow(begin, end, length, window):
     return (0, window - 1, True)
   return (0, length - 1, False)
 
+def sortDic(dic):
+  dic = dict(sorted(dic.items(), key=lambda d: d[0]))
+  return dic
+
 def getWordVector(sentence, dic):
   X = {}
   count = len(dic) + 1
@@ -33,7 +37,8 @@ def getWordVector(sentence, dic):
       dic[wordLoc] = count
       count = count + 1
     index = dic[wordLoc]
-    X[index] = 1  
+    X[index] = 1
+  X = sortDic(X)
   return (X, dic)
 
 def getTestVector(sentence, dic):
@@ -45,7 +50,8 @@ def getTestVector(sentence, dic):
     if wordLoc not in dic:
       dic[wordLoc] = 0
     index = dic[wordLoc]
-    X[index] = 1  
+    X[index] = 1
+  X = sortDic(X)
   return (X, dic)
 
 def generateVector(th, sw, textlist, length, window):
