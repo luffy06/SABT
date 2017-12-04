@@ -216,7 +216,7 @@ def main():
         fileutil.writeFile(testSetLabelNameSVM, line + "\n")
 
 
-def test():
+def getCRFInput():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
   trainsetOutputName = "./data/crf/trainset_fixed.out"
@@ -242,5 +242,5 @@ def test():
     fileutil.writeFile(testFixedOutputName, r.text + "\n")
 
 if __name__ == '__main__':
-  # test()
+  # getCRFInput()
   main()
