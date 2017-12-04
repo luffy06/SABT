@@ -2,21 +2,69 @@
 import copy
 import re
 
-def getNextNumber(text, begin):
-  isEnglish = False
-  for i in range(begin, len(text)):
-    if (text[i] >= 'A' and text[i] <= 'Z') or (text[i] >= 'a' and text[i] <= 'z'):
-      isEnglish = True
-    else:
-      if isEnglish == True:
-        return i
-  return 0
+def isEnglishWord(w):
+  w = w.lower()
+  if w >= 'a' and w <= 'z':
+    return True
+  return False
 
+def isNumber(w):
+  if w >= '0' and w <= '9':
+    return True
+  return False
+
+def getNextEnglishWord(text, begin):
+  end = len(text)
+  for i in range(begin, len(text)):
+    if isEnglishWord(text[i]) == False:
+      end = i
+      break
+  return (text[begin:end], end)
+
+def getNextNumber(text, begin):
+  nbegin = begin
+  if text[begin] == '+' or text[begin] == '-':
+    nbegin = begin + 1
+  end = len(text)
+  foundPoint = False
+  for i in range(nbegin, len(text)):
+    if isNumber(text[i]) == False:
+      if text[i] == '.':
+        if foundPoint == False:
+          foundPoint = True
+        else:
+          end = i
+          break
+      else:
+        end = i
+        break
+  return (text[begin:end], end)
+
+def parseText(text):
+  l = len(text)
+  res = []
+  i = 0
+  while i < l:
+    if isEnglishWord(text[i]) == True:
+      w, i = getNextEnglishWord(text, i)
+      res.append(w)
+    elif isNumber(text[i]) == True or text[i] == '.':
+      w, i = getNextNumber(text, i)
+      res.append(w)
+    elif i < l - 1 and (text[i] == '-' or text[i] == '+') and (isNumber(text[i + 1]) == True or text[i + 1] == '.'):
+      w, i = getNextNumber(text, i)
+      res.append(w)
+    else:
+      res.append(text[i])
+      i = i + 1
+  return res
 
 class Word(object):
   def __init__(self, text, begin):
     self.text = text
     self.begin = begin
+    l = parseText(self.text)
+    self.textlen = len(l)
 
 class SentimentCell(object):
 
@@ -31,7 +79,8 @@ class Row(object):
   def __init__(self, rowid, text, theme, word, anls):
     self.rowid = rowid
     self.text = text
-    self.textlist = []
+    self.textlist = parseText(self.text)
+    self.textlen = len(self.textlist)
     self.parse(theme, word, anls)
     self.crf()
 
@@ -97,4 +146,8 @@ class Row(object):
           self.position[tb] = "B"
           self.position[tb + tlen - 1] = "E"
         pos = tb + tlen
+
+if __name__ == '__main__':
+  text = "你好啊Ok，我就克一把0.+fds2131-.12312"
+  print(parseText(text))
 

@@ -93,12 +93,13 @@ def preProcess(trainingSetName):
             X.append(x)
             Y.append(y)
 
+  return (X, Y, wordDic)
 
 
 def main():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
-  preProcess(trainingSetName)
+  X, Y, wordDic = preProcess(trainingSetName)
 
 def test():
   trainingSetName = "./data/trainset_semi_fixed.csv"
@@ -112,5 +113,5 @@ def test():
     fileutil.writeFile(outputName, "\n")
 
 if __name__ == '__main__':
-  test()
-  # main()
+  # test()
+  main()
