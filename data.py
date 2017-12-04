@@ -92,7 +92,7 @@ class Row(object):
 
   def __init__(self, rowid, text, theme, word, anls):
     self.rowid = rowid
-    self.text = text
+    self.text = text.replace(" ", "，")
     self.textlist = parseText(self.text)
     self.textlen = len(self.textlist)
     self.parse(theme, word, anls)
