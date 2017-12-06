@@ -1,7 +1,7 @@
 #-*-coding:utf-8-*-
 #!/usr/bin/python3
 import fileutil
-from data import Word
+from data import Word, SentimentPair
 # CRF
 
 def getCRF(data):
@@ -178,44 +178,6 @@ def preProcess(trainingSetName):
   print("Generate Trainset of SVM Succeed")
   return wordDic
 
-def main():
-  trainingSetName = "./data/trainset_semi_fixed.csv"
-  rawTestSetName = "./data/test_semi.csv"
-  testSetNameSVM = "./data/svm/test_semi_svm.in"
-  testSetLabelNameSVM = "./data/svm/test_semi_label_svm.in"
-  wordDic = preProcess(trainingSetName)
-  testList = fileutil.readFileFromCSV(rawTestSetName)
-  rowList = crfToRaw()
-  fileutil.deleteFileIfExist(testSetNameSVM)
-  fileutil.deleteFileIfExist(testSetLabelNameSVM)
-  assert len(rowList) == len(testList)
-  window = 10
-  for r in rowList:
-    l = []
-    for th in r[1]:
-      l.append((th[0], th[1], "TH"))
-    for sw in r[2]:
-      l.append((sw[0], sw[1], "SW"))
-    l.sort(key=lambda x: x[1])
-    length = len(l)
-    rowid = r[0] - 1
-    for i, d in enumerate(l):
-      vecList = []
-      if d[2] == "SW":
-        if i - 1 >= 0 and l[i - 1][2] == "TH":
-          vecList.append(generateVector(Word(d[0], d[1]), Word(l[i - 1][0], l[i - 1][1]), testList[rowid].textlist, testList[rowid].textlen, window))
-        if i + 1 < length and l[i + 1][2] == "TH":
-          vecList.append(generateVector(Word(d[0], d[1]), Word(l[i + 1][0], l[i + 1][1]), testList[rowid].textlist, testList[rowid].textlen, window))
-      for v in vecList:
-        x, wordDic = getTestVector(v, wordDic)
-        y = 1
-        line = str(y)
-        for j in x:
-          line = line + " " + str(j) + ":" + str(x[j])
-        fileutil.writeFile(testSetNameSVM, line + "\n")
-        fileutil.writeFile(testSetLabelNameSVM, line + "\n")
-
-
 def getCRFInput():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
@@ -241,6 +203,99 @@ def getCRFInput():
   for r in test:
     fileutil.writeFile(testFixedOutputName, r.text + "\n")
 
+def getSVMPairsInput():
+  trainingSetName = "./data/trainset_semi_fixed.csv"
+  rawTestSetName = "./data/test_semi.csv"
+  testSetNameSVM = "./data/svm/test_semi_svm.in"
+  wordDic = preProcess(trainingSetName)
+  testList = fileutil.readFileFromCSV(rawTestSetName)
+  rowList = crfToRaw()
+  fileutil.deleteFileIfExist(testSetNameSVM)
+  fileutil.deleteFileIfExist(testSetLabelNameSVM)
+  assert len(rowList) == len(testList)
+  sp = []
+  window = 10
+  for r in rowList:
+    l = []
+    for th in r[1]:
+      l.append((th[0], th[1], "TH"))
+    for sw in r[2]:
+      l.append((sw[0], sw[1], "SW"))
+    l.sort(key=lambda x: x[1])
+    length = len(l)
+    rowid = r[0] - 1
+    for i, d in enumerate(l):
+      vecList = []
+      if d[2] == "SW":
+        if i - 1 >= 0 and l[i - 1][2] == "TH":
+          v = generateVector(Word(l[i - 1][0], l[i - 1][1]), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
+          x, wordDic = getTestVector(v, wordDic)
+          s = SentimentPair(r[0], l[i - 1][0], d[0], x)
+          sp.append(s)
+          line = str(1)
+          for j in x:
+            line = line + " " + str(j) + ":" + str(x[j])
+          fileutil.writeFile(testSetNameSVM, line + "\n")
+        if i + 1 < length and l[i + 1][2] == "TH":
+          v = generateVector(Word(l[i + 1][0], l[i + 1][1]), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
+          x, wordDic = getTestVector(v, wordDic)
+          s = SentimentPair(r[0], l[i + 1][0], d[0], x)
+          sp.append(s)
+          line = str(1)
+          for j in x:
+            line = line + " " + str(j) + ":" + str(x[j])
+          fileutil.writeFile(testSetNameSVM, line + "\n")
+  return sp
+
+def getSVMLabelInput(sp):
+  testPairsResult = ""
+  testSetLabelNameSVM = "./data/svm/test_semi_label_svm.in"
+  lines = fileutil.readFile(testPairsResult)
+  assert len(lines) == len(sp)
+  nsp = []
+  for i, l in enumerate(lines):
+    sp[i].set_label(int(l))
+    if int(l) == 1:
+      nsp.append(sp[i])
+      line = l
+      for j in sp[i].vector:
+        line = line + " " + str(j) + ":" + str(sp[i].vector[j])
+      fileutil.writeFile(testSetLabelNameSVM, line + "\n")
+  return sp
+
+def getFinalResult(sp):
+  testAnlsResult = ""
+  rawTestSetName = "./data/test_semi.csv"
+  finalResult = ""
+  lines = fileutil.readFile(testAnlsResult)
+  result = fileutil.readFileFromCSV(rawTestSetName)
+  assert len(lines) == len(sp)
+  for i, l in enumerate(lines):
+    sp[i].set_anls(int(l))
+  sp.sort(key=lambda x: x.rowid)
+
+  data = []
+  j = 0
+  splen = len(sp)
+  for i, r in enumerate(result):
+    d = [r.rowid, r.text]
+    if j < splen:
+      th = []
+      sw = []
+      an = []
+      while sp[j].rowid == r.rowid:
+        th.append(sp[j].theme)
+        sw.append(sp[j].word)
+        an.append(sp[j].anls)
+        j = j + 1
+      d.append(th)
+      d.append(sw)
+      d.append(an)
+    data.append(d)
+  fileutil.writeCSV(finalResult, data)
+
 if __name__ == '__main__':
   # getCRFInput()
-  main()
+  sp = getSVMPairsInput()
+  # sp = getSVMPairsInput(sp)
+  # getFinalResult(sp)

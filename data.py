@@ -166,6 +166,21 @@ class Row(object):
           self.position[tb + tlen - 1] = "E"
         pos = tb + tlen
 
+class SentimentPair(object):
+  """docstring for SentimentPair"""
+  def __init__(self, rowid, theme, word, vector):
+    super(SentimentPair, self).__init__()
+    self.rowid = rowid
+    self.theme = theme
+    self.word = word
+    self.vector = vector
+
+  def set_label(self, label):
+    self.label = label
+
+  def set_anls(self, anls):
+    self.anls = anls
+    
 if __name__ == '__main__':
   text = "你好啊Ok，我就克一把0.+fds2131-.12312"
   print(parseText(text))
