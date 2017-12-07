@@ -30,52 +30,90 @@ def sortDic(dic):
 def getWordVector(sentence, dic):
   X = {}
   count = len(dic) + 1
-  length = len(sentence)
-  for i in range(length):
-    wordLoc = (sentence[i], i+1)
-    if wordLoc not in dic:
-      dic[wordLoc] = count
+  for i in sentence:
+    if i not in dic:
+      dic[i] = count
       count = count + 1
-    index = dic[wordLoc]
+    index = dic[i]
     X[index] = 1
   X = sortDic(X)
   return (X, dic)
 
 def getTestVector(sentence, dic):
   X = {}
-  length = len(sentence)
-  for i in range(length):
-    wordLoc = (sentence[i], i+1)
-    if wordLoc not in dic:
-      dic[wordLoc] = 0
-    index = dic[wordLoc]
+  for i in sentence:
+    if i not in dic:
+      dic[i] = 0
+    index = dic[i]
     X[index] = 1
   X = sortDic(X)
   return (X, dic)
 
-def generateVector(th, sw, textlist, length, window):
-  tlen = th.textlen
-  slen = sw.textlen
-  st = 0
-  ed = 0
-  res = False
-  vec = []
-  if th.begin == -1:
-    st, ed, res = getWindow(sw.begin, sw.begin + slen - 1, length, window)
-  else:
-    begin = min(sw.begin, th.begin)
-    end = max(sw.begin, th.begin)
-    if sw.begin > th.begin:
-      end = end + slen - 1
+def generateVector(method, th, sw, textlist, length, window):
+  if method == 1:
+    tlen = th.textlen
+    slen = sw.textlen
+    st = 0
+    ed = 0
+    res = False
+    vec = []
+    if th.begin == -1:
+      st, ed, res = getWindow(sw.begin, sw.begin + slen - 1, length, window)
     else:
-      end = end + tlen - 1
-    st, ed, res = getWindow(begin, end, length, window)
-  if res == False:
-    for i in range(window - (ed - st + 1)):
-      vec.append("DEFAULF")
-  for i in range(st, ed + 1):
-    vec.append(textlist[i])
-  return vec
+      begin = min(sw.begin, th.begin)
+      end = max(sw.begin, th.begin)
+      if sw.begin > th.begin:
+        end = end + slen - 1
+      else:
+        end = end + tlen - 1
+      st, ed, res = getWindow(begin, end, length, window)
+    j = 1
+    if res == False:
+      for i in range(window - (ed - st + 1)):
+        vec.append(("DEFAULF", j))
+        j = j + 1
+    for i in range(st, ed + 1):
+      vec.append((textlist[i], j))
+      j = j + 1
+    return vec
+  elif method == 2:
+    vec = []
+    begin = min(sw.begin, th.begin)
+    middleP = min(sw.begin + sw.textlen, th.begin + th.textlen)
+    middleE = max(sw.begin, th.begin)
+    end = max(sw.begin + sw.textlen, th.begin + th.textlen)
+    if th.begin == -1:
+      begin = sw.begin
+      middleP = sw.begin + sw.textlen
+      middleE = sw.begin
+      end = sw.begin + sw.textlen
+
+    stepSide = 4
+    stepMiddle = 2
+    for i in range(stepSide):
+      pos = begin - (stepSide - i)
+      if pos >= 0:
+        vec.append((textlist[pos], -1))
+      else:
+        vec.append(("DEFAULF", -1))
+    
+    for i in range(stepMiddle):
+      pos = middleE - (stepMiddle - i)
+      if pos > middleP:
+        vec.append((textlist[pos], 0))
+      else:
+        vec.append(("DEFAULF", 0))      
+
+    for i in range(stepSide):
+      pos = end + (i + 1)
+      if pos < len(textlist):
+        vec.append((textlist[pos], 1))
+      else:
+        vec.append(("DEFAULF", 1))
+    return vec
+  else:
+    print("Wrong Method for Generate Vector")
+    return []
 
 def parseCRF(line):
   line = line.strip('\n')
@@ -127,7 +165,7 @@ def crfToRaw():
       rowid = rowid + 1
   return rowList
 
-def preProcess(trainingSetName):
+def preProcess(trainingSetName, method):
   trainingSetNameSVM = "./data/svm/trainset_semi_svm.in"
   trainingSetLabelNameSVM = "./data/svm/trainset_semi_label_svm.in"
   fileutil.deleteFileIfExist(trainingSetNameSVM)
@@ -141,7 +179,7 @@ def preProcess(trainingSetName):
   wordDic = {}
   for r in result:
     for sc in r.sclist:
-      vec = generateVector(sc.theme, sc.word, r.textlist, r.textlen, window)
+      vec = generateVector(method, sc.theme, sc.word, r.textlist, r.textlen, window)
       x, wordDic = getWordVector(vec, wordDic)
       y = 1
       line = str(y)
@@ -167,7 +205,7 @@ def preProcess(trainingSetName):
           else:
             length = sw.begin - th.begin + sw.textlen
           if length <= window:
-            vec = generateVector(th, sw, r.textlist, r.textlen, window)
+            vec = generateVector(method, th, sw, r.textlist, r.textlen, window)
             x, wordDic = getWordVector(vec, wordDic)
             y = 0
             line = str(y)
@@ -207,13 +245,18 @@ def getSVMPairsInput():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
   testSetNameSVM = "./data/svm/test_semi_svm.in"
-  wordDic = preProcess(trainingSetName)
+  window = 10
+  method = 2
+  wordDic = preProcess(trainingSetName, method)
+  maxDim = -1
+  for i in wordDic:
+    maxDim = max(maxDim, wordDic[i])
+  print("MAX Dimensionality: " + str(maxDim))
   testList = fileutil.readFileFromCSV(rawTestSetName)
   rowList = crfToRaw()
   fileutil.deleteFileIfExist(testSetNameSVM)
   assert len(rowList) == len(testList)
   sp = []
-  window = 10
   for r in rowList:
     l = []
     for th in r[1]:
@@ -227,7 +270,7 @@ def getSVMPairsInput():
       vecList = []
       if d[2] == "SW":
         if i - 1 >= 0 and l[i - 1][2] == "TH":
-          v = generateVector(Word(l[i - 1][0], l[i - 1][1]), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
+          v = generateVector(method, Word(l[i - 1][0], l[i - 1][1]), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
           x, wordDic = getTestVector(v, wordDic)
           s = SentimentPair(r[0], l[i - 1][0], d[0], x)
           sp.append(s)
@@ -236,7 +279,7 @@ def getSVMPairsInput():
             line = line + " " + str(j) + ":" + str(x[j])
           fileutil.writeFile(testSetNameSVM, line + "\n")
         if i + 1 < length and l[i + 1][2] == "TH":
-          v = generateVector(Word(l[i + 1][0], l[i + 1][1]), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
+          v = generateVector(method, Word(l[i + 1][0], l[i + 1][1]), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
           x, wordDic = getTestVector(v, wordDic)
           s = SentimentPair(r[0], l[i + 1][0], d[0], x)
           sp.append(s)
