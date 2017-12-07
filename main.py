@@ -211,7 +211,6 @@ def getSVMPairsInput():
   testList = fileutil.readFileFromCSV(rawTestSetName)
   rowList = crfToRaw()
   fileutil.deleteFileIfExist(testSetNameSVM)
-  fileutil.deleteFileIfExist(testSetLabelNameSVM)
   assert len(rowList) == len(testList)
   sp = []
   window = 10
@@ -245,12 +244,14 @@ def getSVMPairsInput():
           for j in x:
             line = line + " " + str(j) + ":" + str(x[j])
           fileutil.writeFile(testSetNameSVM, line + "\n")
+  print("Generate Testset of SVM Succeed")
   return sp
 
 def getSVMLabelInput(sp):
-  testPairsResult = ""
+  testPairsResult = "./data/svm/test_semi_pairresult.in"
   testSetLabelNameSVM = "./data/svm/test_semi_label_svm.in"
   lines = fileutil.readFile(testPairsResult)
+  fileutil.deleteFileIfExist(testSetLabelNameSVM)
   assert len(lines) == len(sp)
   nsp = []
   for i, l in enumerate(lines):
@@ -264,11 +265,12 @@ def getSVMLabelInput(sp):
   return sp
 
 def getFinalResult(sp):
-  testAnlsResult = ""
+  testAnlsResult = "./data/svm/test_semi_anlsresult.in"
   rawTestSetName = "./data/test_semi.csv"
-  finalResult = ""
+  finalResult = "./data/finalresult.csv"
   lines = fileutil.readFile(testAnlsResult)
   result = fileutil.readFileFromCSV(rawTestSetName)
+  fileutil.deleteFileIfExist(finalResult)
   assert len(lines) == len(sp)
   for i, l in enumerate(lines):
     sp[i].set_anls(int(l))
