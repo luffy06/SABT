@@ -241,6 +241,13 @@ def getCRFInput():
   for r in test:
     fileutil.writeFile(testFixedOutputName, r.text + "\n")
 
+def checkPair(begin, end, textlist):
+  punc = [',', '，', '.', '。', ':', '：', '!', '！', '?', '？', ';', '；', '、', '…']
+  for i in range(begin, end + 1):
+    if textlist[i] in punc:
+      return False
+  return True
+
 def getSVMPairsInput():
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
@@ -258,35 +265,54 @@ def getSVMPairsInput():
   assert len(rowList) == len(testList)
   sp = []
   for r in rowList:
-    l = []
+    tmp = []
     for th in r[1]:
-      l.append((th[0], th[1], "TH"))
+      tmp.append((th[0], th[1], "TH"))
     for sw in r[2]:
-      l.append((sw[0], sw[1], "SW"))
-    l.sort(key=lambda x: x[1])
+      tmp.append((sw[0], sw[1], "SW"))
+    tmp.sort(key=lambda x: x[1])
+    l = []
+    t = 1
+    s = 1
+    for i in tmp:
+      if i[2] == 'TH':
+        l.append((i[0], i[1], i[2], t))
+        t = t + 1
+      else:
+        l.append((i[0], i[1], i[2], s))
+        s = s + 1        
+    
     length = len(l)
     rowid = r[0] - 1
     for i, d in enumerate(l):
       vecList = []
       if d[2] == "SW":
-        if i - 1 >= 0 and l[i - 1][2] == "TH":
+        if i - 1 >= 0 and l[i - 1][2] == "TH" and checkPair(l[i - 1][1], d[1], testList[rowid].textlist) == True:
           v = generateVector(method, Word(l[i - 1][0], l[i - 1][1]), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
           x, wordDic = getTestVector(v, wordDic)
-          s = SentimentPair(r[0], l[i - 1][0], d[0], x)
+          s = SentimentPair(r[0], l[i - 1][0], d[0], x, d[3], l[i - 1][3])
           sp.append(s)
           line = str(1)
           for j in x:
             line = line + " " + str(j) + ":" + str(x[j])
           fileutil.writeFile(testSetNameSVM, line + "\n")
-        if i + 1 < length and l[i + 1][2] == "TH":
+        if i + 1 < length and l[i + 1][2] == "TH" and checkPair(d[1], l[i + 1][1], testList[rowid].textlist) == True:
           v = generateVector(method, Word(l[i + 1][0], l[i + 1][1]), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
           x, wordDic = getTestVector(v, wordDic)
-          s = SentimentPair(r[0], l[i + 1][0], d[0], x)
+          s = SentimentPair(r[0], l[i + 1][0], d[0], x, d[3], l[i + 1][3])
           sp.append(s)
           line = str(1)
           for j in x:
             line = line + " " + str(j) + ":" + str(x[j])
           fileutil.writeFile(testSetNameSVM, line + "\n")
+        v = generateVector(method, Word('NULL', -1), Word(d[0], d[1]), testList[rowid].textlist, testList[rowid].textlen, window)
+        x, wordDic = getTestVector(v, wordDic)
+        s = SentimentPair(r[0], 'NULL', d[0], x, d[3], -1)
+        sp.append(s)
+        line = str(1)
+        for j in x:
+          line = line + " " + str(j) + ":" + str(x[j])
+        fileutil.writeFile(testSetNameSVM, line + "\n")
   print("Generate Testset of SVM Succeed")
   return sp
 
@@ -297,15 +323,45 @@ def getSVMLabelInput(sp):
   fileutil.deleteFileIfExist(testSetLabelNameSVM)
   assert len(lines) == len(sp)
   nsp = []
+  visSw = {}
+  visTh = {}
+  ct = 0
+  lps = (-1, -1)
+  ind = -1
   for i, l in enumerate(lines):
     l = l.strip('\n')
     sp[i].set_label(int(l))
-    if int(l) == 1:
-      nsp.append(sp[i])
-      line = l
-      for j in sp[i].vector:
-        line = line + " " + str(j) + ":" + str(sp[i].vector[j])
-      fileutil.writeFile(testSetLabelNameSVM, line + "\n")
+    ps = (sp[i].rowid, sp[i].swnum)
+    pt = (sp[i].rowid, sp[i].thnum)
+    if int(l) == 1 and ps not in visSw:
+      if pt not in visTh and pt[1] != -1:
+        # print("Using" + " " + str(sp[i].rowid) + " " + str(sp[i].thnum) + " " + str(sp[i].theme) + " " + str(sp[i].word))
+        visTh[pt] = True
+      elif pt in visTh:
+        ct = ct + 1
+        # print("Exist" + " " + str(sp[i].rowid) + " " + str(sp[i].thnum) + " " + str(sp[i].theme) + " " + str(sp[i].word))
+        visSw[ps] = True
+        nsp.append(sp[i])
+        line = l
+        for j in sp[i].vector:
+          line = line + " " + str(j) + ":" + str(sp[i].vector[j])
+        fileutil.writeFile(testSetLabelNameSVM, line + "\n")
+    if ps != lps:
+      if lps[0] > 0 and lps not in visSw:
+        ind = -1
+        for k in range(i):
+          if sp[i - k].rowid == lps[0] and sp[i - k].swnum == lps[1] and sp[i - k].thnum == -1:
+            ind = i - k
+            break
+        if ind == -1:
+          print("Not Found " + str(lps[0]) + " " + str(lps[1]))
+        nsp.append(sp[ind])
+        line = l
+        for j in sp[ind].vector:
+          line = line + " " + str(j) + ":" + str(sp[ind].vector[j])
+        fileutil.writeFile(testSetLabelNameSVM, line + "\n")
+      lps = ps
+  print("Repeat Theme " + str(ct))
   print("Generate Testset of Label Succeed")
   return nsp
 

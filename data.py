@@ -168,12 +168,14 @@ class Row(object):
 
 class SentimentPair(object):
   """docstring for SentimentPair"""
-  def __init__(self, rowid, theme, word, vector):
+  def __init__(self, rowid, theme, word, vector, swnum, thnum):
     super(SentimentPair, self).__init__()
     self.rowid = rowid
     self.theme = theme
     self.word = word
     self.vector = vector
+    self.swnum = swnum
+    self.thnum = thnum
 
   def set_label(self, label):
     self.label = label
