@@ -56,7 +56,7 @@ def writeFile(filename, data):
   f.close()
 
 def writeCSV(filename, data):
-  writer = csv.writer(file(filename, "a", encoding='utf-8'))
+  writer = csv.writer(open(filename, "a", encoding='utf-8'))
   for d in data:
     writer.wirterow(d)
 

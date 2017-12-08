@@ -307,7 +307,7 @@ def getSVMLabelInput(sp):
         line = line + " " + str(j) + ":" + str(sp[i].vector[j])
       fileutil.writeFile(testSetLabelNameSVM, line + "\n")
   print("Generate Testset of Label Succeed")
-  return sp
+  return nsp
 
 def getFinalResult(sp):
   testAnlsResult = "./data/svm/test_semi_anlsresult.in"
@@ -346,4 +346,4 @@ if __name__ == '__main__':
   # getCRFInput()
   sp = getSVMPairsInput()
   sp = getSVMLabelInput(sp)
-  # getFinalResult(sp)
+  getFinalResult(sp)
