@@ -326,6 +326,8 @@ def getSVMLabelInput(sp):
   visSw = {}
   visTh = {}
   ct = 0
+  nonct = 0
+  nullct = 0
   lps = (-1, -1)
   ind = -1
   for i, l in enumerate(lines):
@@ -334,18 +336,21 @@ def getSVMLabelInput(sp):
     ps = (sp[i].rowid, sp[i].swnum)
     pt = (sp[i].rowid, sp[i].thnum)
     if int(l) == 1 and ps not in visSw:
-      if pt not in visTh and pt[1] != -1:
+      if pt not in visTh:
         # print("Using" + " " + str(sp[i].rowid) + " " + str(sp[i].thnum) + " " + str(sp[i].theme) + " " + str(sp[i].word))
-        visTh[pt] = True
-      elif pt in visTh:
-        ct = ct + 1
-        # print("Exist" + " " + str(sp[i].rowid) + " " + str(sp[i].thnum) + " " + str(sp[i].theme) + " " + str(sp[i].word))
+        if pt[1] != -1:
+          visTh[pt] = True
         visSw[ps] = True
+        nonct = nonct + 1
         nsp.append(sp[i])
         line = l
         for j in sp[i].vector:
           line = line + " " + str(j) + ":" + str(sp[i].vector[j])
         fileutil.writeFile(testSetLabelNameSVM, line + "\n")
+      else:
+        ct = ct + 1
+        # print("Exist" + " " + str(sp[i].rowid) + " " + str(sp[i].thnum) + " " + str(sp[i].theme) + " " + str(sp[i].word))
+    # add NULL Theme
     if ps != lps:
       if lps[0] > 0 and lps not in visSw:
         ind = -1
@@ -355,13 +360,16 @@ def getSVMLabelInput(sp):
             break
         if ind == -1:
           print("Not Found " + str(lps[0]) + " " + str(lps[1]))
-        nsp.append(sp[ind])
-        line = l
-        for j in sp[ind].vector:
-          line = line + " " + str(j) + ":" + str(sp[ind].vector[j])
-        fileutil.writeFile(testSetLabelNameSVM, line + "\n")
+        else:
+          nullct = nullct + 1
+          nsp.append(sp[ind])
+          line = l
+          for j in sp[ind].vector:
+            line = line + " " + str(j) + ":" + str(sp[ind].vector[j])
+          fileutil.writeFile(testSetLabelNameSVM, line + "\n")
       lps = ps
   print("Repeat Theme " + str(ct))
+  print("Pair Theme is Not NULL: " + str(nonct) + " NULL:" + str(nullct))
   print("Generate Testset of Label Succeed")
   return nsp
 
