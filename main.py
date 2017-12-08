@@ -298,6 +298,7 @@ def getSVMLabelInput(sp):
   assert len(lines) == len(sp)
   nsp = []
   for i, l in enumerate(lines):
+    l = l.strip('\n')
     sp[i].set_label(int(l))
     if int(l) == 1:
       nsp.append(sp[i])
@@ -305,6 +306,7 @@ def getSVMLabelInput(sp):
       for j in sp[i].vector:
         line = line + " " + str(j) + ":" + str(sp[i].vector[j])
       fileutil.writeFile(testSetLabelNameSVM, line + "\n")
+  print("Generate Testset of Label Succeed")
   return sp
 
 def getFinalResult(sp):
@@ -316,6 +318,7 @@ def getFinalResult(sp):
   fileutil.deleteFileIfExist(finalResult)
   assert len(lines) == len(sp)
   for i, l in enumerate(lines):
+    l = l.strip('\n')
     sp[i].set_anls(int(l))
   sp.sort(key=lambda x: x.rowid)
 
@@ -342,5 +345,5 @@ def getFinalResult(sp):
 if __name__ == '__main__':
   # getCRFInput()
   sp = getSVMPairsInput()
-  # sp = getSVMPairsInput(sp)
+  sp = getSVMLabelInput(sp)
   # getFinalResult(sp)
