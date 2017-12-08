@@ -328,13 +328,13 @@ def getFinalResult(sp):
   for i, r in enumerate(result):
     d = [r.rowid, r.text]
     if j < splen:
-      th = []
-      sw = []
-      an = []
-      while sp[j].rowid == r.rowid:
-        th.append(sp[j].theme)
-        sw.append(sp[j].word)
-        an.append(sp[j].anls)
+      th = ''
+      sw = ''
+      an = ''
+      while j < splen and int(sp[j].rowid) == int(r.rowid):
+        th = th + str(sp[j].theme) + ';'
+        sw = sw + str(sp[j].word) + ';'
+        an = an + str(sp[j].anls) + ';'
         j = j + 1
       d.append(th)
       d.append(sw)

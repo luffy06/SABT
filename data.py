@@ -181,6 +181,8 @@ class SentimentPair(object):
   def set_anls(self, anls):
     self.anls = anls
     
+  def show(self):
+    print(str(self.rowid) + " " + str(self.theme) + " " + str(self.word) + " " + str(self.anls))
 if __name__ == '__main__':
   text = "你好啊Ok，我就克一把0.+fds2131-.12312"
   print(parseText(text))

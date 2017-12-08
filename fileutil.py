@@ -56,9 +56,9 @@ def writeFile(filename, data):
   f.close()
 
 def writeCSV(filename, data):
-  writer = csv.writer(open(filename, "a", encoding='utf-8'))
+  writer = csv.writer(open(filename, "w"))
   for d in data:
-    writer.wirterow(d)
+    writer.writerow(d)
 
 def checkFileIfExist(filename):
   return os.path.exists(filename)
