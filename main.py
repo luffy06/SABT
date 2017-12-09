@@ -88,8 +88,8 @@ def generateVector(method, th, sw, textlist, length, window):
       middleE = sw.begin
       end = sw.begin + sw.textlen
 
-    stepSide = 4
-    stepMiddle = 2
+    stepSide = int(window * 0.4)
+    stepMiddle = window - 2 * stepSide
     for i in range(stepSide):
       pos = begin - (stepSide - i)
       if pos >= 0:
@@ -165,7 +165,7 @@ def crfToRaw():
       rowid = rowid + 1
   return rowList
 
-def preProcess(trainingSetName, method):
+def preProcess(trainingSetName, method, window):
   trainingSetNameSVM = "./data/svm/trainset_semi_svm.in"
   trainingSetLabelNameSVM = "./data/svm/trainset_semi_label_svm.in"
   fileutil.deleteFileIfExist(trainingSetNameSVM)
@@ -175,12 +175,14 @@ def preProcess(trainingSetName, method):
   # getCRF(result)
   # print("Generate Trainset of CRF Succeed")
 
-  window = 10
+  positive = 0
+  negative = 0
   wordDic = {}
   for r in result:
     for sc in r.sclist:
       vec = generateVector(method, sc.theme, sc.word, r.textlist, r.textlen, window)
       x, wordDic = getWordVector(vec, wordDic)
+      positive = positive + 1
       y = 1
       line = str(y)
       for i in x:
@@ -196,6 +198,7 @@ def preProcess(trainingSetName, method):
       for j, scj in enumerate(r.sclist):
         if i == j:
           continue
+        # TODO
         th = sci.theme
         sw = scj.word
         if th.begin != -1:
@@ -205,6 +208,7 @@ def preProcess(trainingSetName, method):
           else:
             length = sw.begin - th.begin + sw.textlen
           if length <= window:
+            negative = negative + 1
             vec = generateVector(method, th, sw, r.textlist, r.textlen, window)
             x, wordDic = getWordVector(vec, wordDic)
             y = 0
@@ -212,7 +216,7 @@ def preProcess(trainingSetName, method):
             for xi in x:
               line = line + " "  + str(xi) + ":" + str(x[xi])
             fileutil.writeFile(trainingSetNameSVM, line + "\n")
-
+  print("Postive Sample: " + str(positive) + " Negative Sample: " + str(negative))
   print("Generate Trainset of SVM Succeed")
   return wordDic
 
@@ -248,13 +252,12 @@ def checkPair(begin, end, textlist):
       return False
   return True
 
-def getSVMPairsInput():
+def getSVMPairsInput(window):
   trainingSetName = "./data/trainset_semi_fixed.csv"
   rawTestSetName = "./data/test_semi.csv"
   testSetNameSVM = "./data/svm/test_semi_svm.in"
-  window = 10
   method = 2
-  wordDic = preProcess(trainingSetName, method)
+  wordDic = preProcess(trainingSetName, method, window)
   maxDim = -1
   for i in wordDic:
     maxDim = max(maxDim, wordDic[i])
@@ -407,7 +410,8 @@ def getFinalResult(sp):
   fileutil.writeCSV(finalResult, data)
 
 if __name__ == '__main__':
+  window = 20
   # getCRFInput()
-  sp = getSVMPairsInput()
+  sp = getSVMPairsInput(window)
   sp = getSVMLabelInput(sp)
   getFinalResult(sp)
