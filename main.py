@@ -172,8 +172,8 @@ def preProcess(trainingSetName, method, window):
   fileutil.deleteFileIfExist(trainingSetLabelNameSVM)
 
   result = fileutil.readFileFromCSV(trainingSetName)
-  # getCRF(result)
-  # print("Generate Trainset of CRF Succeed")
+  getCRF(result)
+  print("Generate Trainset of CRF Succeed")
 
   positive = 0
   negative = 0
@@ -322,6 +322,8 @@ def getSVMPairsInput(window):
 def getSVMLabelInput(sp):
   testPairsResult = "./data/svm/test_semi_pairresult.in"
   testSetLabelNameSVM = "./data/svm/test_semi_label_svm.in"
+  if fileutil.checkFileIfExist(testPairsResult) == False:
+    return []
   lines = fileutil.readFile(testPairsResult)
   fileutil.deleteFileIfExist(testSetLabelNameSVM)
   assert len(lines) == len(sp)
@@ -382,6 +384,8 @@ def getFinalResult(sp, dic):
   result = fileutil.readFileFromCSV(rawTestSetName)
   if dic == False:
     testAnlsResult = "./data/svm/test_semi_anlsresult.in"
+    if fileutil.checkFileIfExist(testAnlsResult) == False:
+      sp = []
     lines = fileutil.readFile(testAnlsResult)
     fileutil.deleteFileIfExist(finalResult)
     assert len(lines) == len(sp)
@@ -408,7 +412,13 @@ def getFinalResult(sp, dic):
       else:
         notfound = notfound + 1
       sp[i].set_anls(anls)
-    print("Not Found in Dic:" + str(notfound) + " Rate: " + str(notfound * 1.0 / len(sp)))
+    
+    rate = notfound
+    if len(sp) > 0:
+      rate = rate * 1.0 / len(sp)
+    else:
+      rate = 0
+    print("Not Found in Dic:" + str(notfound) + " Rate: %.6f" % rate)
   sp.sort(key=lambda x: x.rowid)
 
   data = []
@@ -433,7 +443,7 @@ def getFinalResult(sp, dic):
 
 if __name__ == '__main__':
   window = 20
-  # getCRFInput()
+  getCRFInput()
   sp = getSVMPairsInput(window)
   sp = getSVMLabelInput(sp)
   getFinalResult(sp, True)
