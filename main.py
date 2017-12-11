@@ -376,17 +376,39 @@ def getSVMLabelInput(sp):
   print("Generate Testset of Label Succeed")
   return nsp
 
-def getFinalResult(sp):
-  testAnlsResult = "./data/svm/test_semi_anlsresult.in"
+def getFinalResult(sp, dic):
   rawTestSetName = "./data/test_semi.csv"
   finalResult = "./data/finalresult.csv"
-  lines = fileutil.readFile(testAnlsResult)
   result = fileutil.readFileFromCSV(rawTestSetName)
-  fileutil.deleteFileIfExist(finalResult)
-  assert len(lines) == len(sp)
-  for i, l in enumerate(lines):
-    l = l.strip('\n')
-    sp[i].set_anls(int(l))
+  if dic == False:
+    testAnlsResult = "./data/svm/test_semi_anlsresult.in"
+    lines = fileutil.readFile(testAnlsResult)
+    fileutil.deleteFileIfExist(finalResult)
+    assert len(lines) == len(sp)
+    for i, l in enumerate(lines):
+      l = l.strip('\n')
+      sp[i].set_anls(int(l))
+  else:
+    filename = "./data/sentimentdic.out"
+    lines = fileutil.readFile(filename)
+    swdic = {}
+    error = 0
+    notfound = 0
+    for l in lines:
+      s = l.strip('\n').split(' ')
+      if s[0] not in swdic:
+        swdic[s[0]] = s[1]
+      elif swdic[s[0]] != s[1]:
+        error = error + 1
+    print("Error Dic:" + str(error))
+    for i, s in enumerate(sp):
+      anls = 0
+      if s.word in swdic:
+        anls = swdic[s.word]
+      else:
+        notfound = notfound + 1
+      sp[i].set_anls(anls)
+    print("Not Found in Dic:" + str(notfound) + " Rate: " + str(notfound * 1.0 / len(sp)))
   sp.sort(key=lambda x: x.rowid)
 
   data = []
@@ -414,4 +436,4 @@ if __name__ == '__main__':
   # getCRFInput()
   sp = getSVMPairsInput(window)
   sp = getSVMLabelInput(sp)
-  getFinalResult(sp)
+  getFinalResult(sp, True)
