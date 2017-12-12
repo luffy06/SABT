@@ -443,7 +443,7 @@ def getFinalResult(sp, dic):
 
 if __name__ == '__main__':
   window = 20
-  getCRFInput()
+  # getCRFInput()
   sp = getSVMPairsInput(window)
   sp = getSVMLabelInput(sp)
   getFinalResult(sp, True)
