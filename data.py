@@ -2,33 +2,33 @@
 import copy
 import re
 
-def isEnglishWord(w):
+def is_english_word(w):
   w = w.lower()
   if w >= 'a' and w <= 'z':
     return True
   return False
 
-def isNumber(w):
+def is_number(w):
   if w >= '0' and w <= '9':
     return True
   return False
 
-def getNextEnglishWord(text, begin):
+def get_next_english_word(text, begin):
   end = len(text)
   for i in range(begin, len(text)):
-    if isEnglishWord(text[i]) == False:
+    if is_english_word(text[i]) == False:
       end = i
       break
   return (text[begin:end], end)
 
-def getNextNumber(text, begin):
+def get_next_number(text, begin):
   nbegin = begin
   if text[begin] == '+' or text[begin] == '-':
     nbegin = begin + 1
   end = len(text)
   foundPoint = False
   for i in range(nbegin, len(text)):
-    if isNumber(text[i]) == False:
+    if is_number(text[i]) == False:
       if text[i] == '.':
         if foundPoint == False:
           foundPoint = True
@@ -40,19 +40,19 @@ def getNextNumber(text, begin):
         break
   return (text[begin:end], end)
 
-def parseText(text):
+def parse_text(text):
   l = len(text)
   res = []
   i = 0
   while i < l:
-    if isEnglishWord(text[i]) == True:
-      w, i = getNextEnglishWord(text, i)
+    if is_english_word(text[i]) == True:
+      w, i = get_next_english_word(text, i)
       res.append(w)
-    elif isNumber(text[i]) == True or text[i] == '.':
-      w, i = getNextNumber(text, i)
+    elif is_number(text[i]) == True or text[i] == '.':
+      w, i = get_next_number(text, i)
       res.append(w)
-    elif i < l - 1 and (text[i] == '-' or text[i] == '+') and (isNumber(text[i + 1]) == True or text[i + 1] == '.'):
-      w, i = getNextNumber(text, i)
+    elif i < l - 1 and (text[i] == '-' or text[i] == '+') and (is_number(text[i + 1]) == True or text[i + 1] == '.'):
+      w, i = get_next_number(text, i)
       res.append(w)
     else:
       res.append(text[i])
@@ -62,7 +62,7 @@ def parseText(text):
     res.append(j)
   return res
 
-def getStartPos(begin, textlist):
+def get_start_pos(begin, textlist):
   if begin == -1:
     return -1
   l = 0
@@ -71,16 +71,16 @@ def getStartPos(begin, textlist):
       if l == begin:
         return i
       else:
-        print("Error")
+        print('Error')
     l = l + len(ti)
-  print("Error 2")
+  print('Error 2')
   return -1
 
 class Word(object):
   def __init__(self, text, begin):
     self.text = text
     self.begin = begin
-    l = parseText(self.text)
+    l = parse_text(self.text)
     self.textlen = len(l)
 
 class SentimentCell(object):
@@ -89,14 +89,13 @@ class SentimentCell(object):
     self.theme = theme
     self.word = word
     self.anls = anls
-    
 
 class Row(object):
 
   def __init__(self, rowid, text, theme, word, anls):
     self.rowid = rowid
-    self.text = text.replace(" ", "，")
-    self.textlist = parseText(self.text)
+    self.text = text.replace(' ', '，')
+    # self.textlist = parse_text(self.text)
     self.textlen = len(self.text)
     self.parse(theme, word, anls)
     self.crf()
@@ -113,23 +112,23 @@ class Row(object):
         w = wlist[i]
         a = alist[i]
 
-        # wb = getStartPos(self.text.find(w), self.textlist)
-        # tb = getStartPos(self.text.find(t), self.textlist)
+        # wb = get_start_pos(self.text.find(w), self.textlist)
+        # tb = get_start_pos(self.text.find(t), self.textlist)
         wb = self.text.find(w)
         tb = self.text.find(t)
 
-        if wb != -1 and t != "" and w != "" and a != "":
+        if wb != -1 and t != '' and w != '' and a != '':
           sc = SentimentCell(Word(t, tb), Word(w, wb), a)
           self.sclist.append(sc)
     else:
-      print("Length is not matched!!!!!" + str(self.rowid) + " theme:" + theme + " word:" + word + " anls:" + anls)
+      print('Length is not matched!!!!!' + str(self.rowid) + ' theme:' + theme + ' word:' + word + ' anls:' + anls)
 
   def crf(self):
     self.order = []
     self.position = []
     for i in self.text:
-      self.order.append("O")
-      self.position.append("S")
+      self.order.append('O')
+      self.position.append('S')
 
     length = len(self.text)
     for sc in self.sclist:
@@ -140,13 +139,13 @@ class Row(object):
         if sb == -1:
           break
         for i in range(sb, sb + wlen):
-          self.order[i] = "S"
-          self.position[i] = "M"
+          self.order[i] = 'S'
+          self.position[i] = 'M'
         if wlen == 1:
-          self.position[sb] = "S"
+          self.position[sb] = 'S'
         else:
-          self.position[sb] = "B"
-          self.position[sb + wlen - 1] = "E"
+          self.position[sb] = 'B'
+          self.position[sb + wlen - 1] = 'E'
         pos = sb + wlen
 
     for sc in self.sclist:
@@ -157,17 +156,16 @@ class Row(object):
         if tb == -1:
           break
         for i in range(tb, tb + tlen):
-          self.order[i] = "T"
-          self.position[i] = "M"
+          self.order[i] = 'T'
+          self.position[i] = 'M'
         if tlen == 1:
-          self.position[tb] = "S"
+          self.position[tb] = 'S'
         else:
-          self.position[tb] = "B"
-          self.position[tb + tlen - 1] = "E"
+          self.position[tb] = 'B'
+          self.position[tb + tlen - 1] = 'E'
         pos = tb + tlen
 
 class SentimentPair(object):
-  """docstring for SentimentPair"""
   def __init__(self, rowid, theme, word, vector, swnum, thnum):
     super(SentimentPair, self).__init__()
     self.rowid = rowid
@@ -184,8 +182,8 @@ class SentimentPair(object):
     self.anls = anls
     
   def show(self):
-    print(str(self.rowid) + " " + str(self.theme) + " " + str(self.word) + " " + str(self.anls))
+    print(str(self.rowid) + ' ' + str(self.theme) + ' ' + str(self.word) + ' ' + str(self.anls))
 if __name__ == '__main__':
-  text = "你好啊Ok，我就克一把0.+fds2131-.12312"
-  print(parseText(text))
+  text = '你好啊Ok，我就克一把0.+fds2131-.12312'
+  print(parse_text(text))
 

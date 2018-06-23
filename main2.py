@@ -56,8 +56,19 @@ def get_crf_input(datas, types):
         fu.write_file(crf_in, t + '\n')
     fu.write_file(crf_in, '\n')
 
-def get_model_input(data, types):
-  
+def generate_dic(data):
+  word_dic = {}
+  ct = 1
+  for d in data:
+    for t in d.text:
+      if t not in word_dic:
+        word_dic[t] = ct
+        ct = ct + 1
+  return word_dic
+
+def get_model_input(data, types, dic):
+  for d in data:
+    
 
 def main():
   trainfile = 'data/trainset_semi_fixed.csv'
@@ -73,11 +84,13 @@ def main():
     fu.rmdir(dirname)
   os.mkdir(dirname)
 
+  word_dic = generate_dic(train_data)
+
   get_crf_input(train_data, 'train')
   get_crf_input(train_data, 'valid')
   get_crf_input(train_data, 'test')
 
-
+  get_model_input()
 
 
 if __name__ == '__main__':
