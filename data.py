@@ -95,7 +95,7 @@ class Row(object):
   def __init__(self, rowid, text, theme, word, anls):
     self.rowid = rowid
     self.text = text.replace(' ', '，')
-    # self.textlist = parse_text(self.text)
+    self.textlist = parse_text(self.text)
     self.textlen = len(self.text)
     self.parse(theme, word, anls)
     self.crf()

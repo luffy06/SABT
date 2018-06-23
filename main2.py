@@ -66,8 +66,129 @@ def generate_dic(data):
         ct = ct + 1
   return word_dic
 
+def get_window(begin, end, length, window):
+  if end - begin + 1 == window:
+    return (begin, end, True)
+  elif end + 1 >= window:
+    return (end - window + 1, end, True)
+  elif length >= window:
+    return (0, window - 1, True)
+  return (0, length - 1, False)
+
+def generate_vector(method, th, sw, textlist, length, window):
+  if method == 1:
+    tlen = th.textlen
+    slen = sw.textlen
+    st = 0
+    ed = 0
+    enough = False
+    vec = []
+    if th.begin == -1:
+      # Theme word is null
+      st, ed, enough = get_window(sw.begin, sw.begin + slen - 1, length, window)
+    else:
+      begin = min(sw.begin, th.begin)
+      end = max(sw.begin, th.begin)
+      if sw.begin > th.begin:
+        end = end + slen - 1
+      else:
+        end = end + tlen - 1
+      st, ed, enough = get_window(begin, end, length, window)
+    j = 1
+    if enough == False:
+      for i in range(window - (ed - st + 1)):
+        vec.append(("DEFAULF", j))
+        j = j + 1
+    for i in range(st, ed + 1):
+      vec.append((textlist[i], j))
+      j = j + 1
+    return vec
+  elif method == 2:
+    vec = []
+    begin = min(sw.begin, th.begin)
+    end = max(sw.begin + sw.textlen, th.begin + th.textlen)
+    middleP = min(sw.begin + sw.textlen, th.begin + th.textlen)
+    middleE = max(sw.begin, th.begin)
+    if th.begin == -1:
+      begin = sw.begin
+      middleP = sw.begin + sw.textlen
+      middleE = sw.begin
+      end = sw.begin + sw.textlen
+
+    stepSide = int(window * 0.4)
+    stepMiddle = window - 2 * stepSide
+    for i in range(stepSide):
+      pos = begin - (stepSide - i)
+      if pos >= 0:
+        vec.append((textlist[pos], -1))
+      else:
+        vec.append(("DEFAULF", -1))
+    
+    for i in range(stepMiddle):
+      pos = middleE - (stepMiddle - i)
+      if pos > middleP:
+        vec.append((textlist[pos], 0))
+      else:
+        vec.append(("DEFAULF", 0))      
+
+    for i in range(stepSide):
+      pos = end + (i + 1)
+      if pos < len(textlist):
+        vec.append((textlist[pos], 1))
+      else:
+        vec.append(("DEFAULF", 1))
+    return vec
+  else:
+    print("Wrong Method for Generate Vector")
+    return []
+
+
 def get_model_input(data, types, dic):
+  
+  positive = 0
+  negative = 0
+  window = 20
   for d in data:
+    for sc in d.sclist:
+      vec = generate_vector(method, sc.theme, sc.word, d.textlist, d.textlen, window)
+      x, wordDic = getWordVector(vec, wordDic)
+      positive = positive + 1
+      y = 1
+      line = str(y)
+      for i in x:
+        line = line + " "  + str(i) + ":" + str(x[i])
+      fileutil.writeFile(trainingSetNameSVM, line + "\n")
+      line = str(sc.anls)
+      for i in x:
+        line = line + " "  + str(i) + ":" + str(x[i])
+      fileutil.writeFile(trainingSetLabelNameSVM, line + "\n")
+
+  for r in result:
+    for i, sci in enumerate(r.sclist):
+      for j, scj in enumerate(r.sclist):
+        if i == j:
+          continue
+        # TODO
+        th = sci.theme
+        sw = scj.word
+        if th.begin != -1:
+          length = 0
+          if th.begin > sw.begin:
+            length = th.begin - sw.begin + th.textlen
+          else:
+            length = sw.begin - th.begin + sw.textlen
+          if length <= window:
+            negative = negative + 1
+            vec = generate_vector(method, th, sw, r.textlist, r.textlen, window)
+            x, wordDic = getWordVector(vec, wordDic)
+            y = 0
+            line = str(y)
+            for xi in x:
+              line = line + " "  + str(xi) + ":" + str(x[xi])
+            fileutil.writeFile(trainingSetNameSVM, line + "\n")
+  print("Postive Sample: " + str(positive) + " Negative Sample: " + str(negative))
+  print("Generate Trainset of SVM Succeed")
+  return wordDic    
     
 
 def main():
