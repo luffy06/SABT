@@ -5,18 +5,18 @@ import csv
 from data import Row
 
 def read_file(filename):
-  file = open(filename, "r")
+  file = open(filename, 'r', encoding='utf8')
   result = list(map(lambda x : x.strip(), file.readlines()))
   file.close()
   return result
 
 def write_file(filename, data):
-  f = open(filename, "a")
+  f = open(filename, 'a', encoding='utf8')
   f.write(data)
   f.close()
 
 def read_file_from_csv(filename):
-  origindata = csv.reader(open(filename, encoding='utf-8'))
+  origindata = csv.reader(open(filename, encoding='utf8'))
   result = []
   for od in origindata:
     line = []
@@ -26,7 +26,7 @@ def read_file_from_csv(filename):
   return result
 
 def write_csv(filename, data):
-  writer = csv.writer(open(filename, "w"))
+  writer = csv.writer(open(filename, 'w', encoding='utf8'))
   for d in data:
     writer.writerow(d)
 
