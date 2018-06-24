@@ -8,6 +8,11 @@ from data import Row
 TRAIN_RATE = 0.8
 VALID_RATE = 0.3
 
+def mkdir(dirname):
+  if os.path.exists(dirname):
+    fu.rmdir(dirname)
+  os.mkdir(dirname)
+
 def load_data(filename):
   datas = fu.read_file_from_csv(filename)
   return datas
@@ -66,130 +71,94 @@ def generate_dic(data):
         ct = ct + 1
   return word_dic
 
-def get_window(begin, end, length, window):
-  if end - begin + 1 == window:
-    return (begin, end, True)
-  elif end + 1 >= window:
-    return (end - window + 1, end, True)
-  elif length >= window:
-    return (0, window - 1, True)
-  return (0, length - 1, False)
-
-def generate_vector(method, th, sw, textlist, length, window):
-  if method == 1:
-    tlen = th.textlen
-    slen = sw.textlen
-    st = 0
-    ed = 0
-    enough = False
-    vec = []
-    if th.begin == -1:
-      # Theme word is null
-      st, ed, enough = get_window(sw.begin, sw.begin + slen - 1, length, window)
+def get_window(textlist, position, direction, length, window):
+  vec = []
+  for i in range(window):
+    r_pos = position + direction * i
+    if r_pos >= 0 and r_pos < length:
+      vec.append(textlist[r_pos])
     else:
-      begin = min(sw.begin, th.begin)
-      end = max(sw.begin, th.begin)
-      if sw.begin > th.begin:
-        end = end + slen - 1
-      else:
-        end = end + tlen - 1
-      st, ed, enough = get_window(begin, end, length, window)
-    j = 1
-    if enough == False:
-      for i in range(window - (ed - st + 1)):
-        vec.append(("DEFAULF", j))
-        j = j + 1
-    for i in range(st, ed + 1):
-      vec.append((textlist[i], j))
-      j = j + 1
-    return vec
-  elif method == 2:
-    vec = []
-    begin = min(sw.begin, th.begin)
-    end = max(sw.begin + sw.textlen, th.begin + th.textlen)
-    middleP = min(sw.begin + sw.textlen, th.begin + th.textlen)
-    middleE = max(sw.begin, th.begin)
-    if th.begin == -1:
-      begin = sw.begin
-      middleP = sw.begin + sw.textlen
-      middleE = sw.begin
-      end = sw.begin + sw.textlen
+      vec.append('DEFAULF')
+  return vec
 
-    stepSide = int(window * 0.4)
-    stepMiddle = window - 2 * stepSide
-    for i in range(stepSide):
-      pos = begin - (stepSide - i)
-      if pos >= 0:
-        vec.append((textlist[pos], -1))
-      else:
-        vec.append(("DEFAULF", -1))
-    
-    for i in range(stepMiddle):
-      pos = middleE - (stepMiddle - i)
-      if pos > middleP:
-        vec.append((textlist[pos], 0))
-      else:
-        vec.append(("DEFAULF", 0))      
-
-    for i in range(stepSide):
-      pos = end + (i + 1)
-      if pos < len(textlist):
-        vec.append((textlist[pos], 1))
-      else:
-        vec.append(("DEFAULF", 1))
-    return vec
+def generate_vector(th, sw, textlist, length, window, dic):
+  sw_front_vec = get_window(textlist, sw.begin + sw.textlen - 1, -1, length, window)
+  sw_back_vec = get_window(textlist, sw.begin, 1, length, window)
+  th_front_vec = get_window(textlist, th.begin + th.textlen - 1, -1, length, window)
+  th_back_vec = get_window(textlist, th.begin, 1, length, window)
+  vec = []
+  front_vec = []
+  back_vec = []
+  if sw.begin < th.begin:
+    front_vec = sw_back_vec
+    back_vec = th_front_vec
   else:
-    print("Wrong Method for Generate Vector")
-    return []
+    front_vec = th_back_vec
+    back_vec = sw_front_vec
 
+  for i in front_vec:
+    value = dic[i] if i in dic else 0
+    vec.append(str(value))
+  for i in back_vec:
+    value = dic[i] if i in dic else 0
+    vec.append(str(value))
+  return vec
 
 def get_model_input(data, types, dic):
-  
+  model_in = 'model/model_' + types + '.npy'
+  model_label_in = 'model/model_label_' + types + '.npy'
   positive = 0
   negative = 0
   window = 20
+  train_data = []
   for d in data:
     for sc in d.sclist:
-      vec = generate_vector(method, sc.theme, sc.word, d.textlist, d.textlen, window)
-      x, wordDic = getWordVector(vec, wordDic)
       positive = positive + 1
-      y = 1
-      line = str(y)
-      for i in x:
-        line = line + " "  + str(i) + ":" + str(x[i])
-      fileutil.writeFile(trainingSetNameSVM, line + "\n")
-      line = str(sc.anls)
-      for i in x:
-        line = line + " "  + str(i) + ":" + str(x[i])
-      fileutil.writeFile(trainingSetLabelNameSVM, line + "\n")
+      vec = generate_vector(sc.theme, sc.word, d.textlist, d.textlen, window, dic)
+      train_data.append([vec, 1])
 
-  for r in result:
-    for i, sci in enumerate(r.sclist):
-      for j, scj in enumerate(r.sclist):
-        if i == j:
-          continue
-        # TODO
-        th = sci.theme
-        sw = scj.word
-        if th.begin != -1:
-          length = 0
-          if th.begin > sw.begin:
-            length = th.begin - sw.begin + th.textlen
-          else:
-            length = sw.begin - th.begin + sw.textlen
-          if length <= window:
-            negative = negative + 1
-            vec = generate_vector(method, th, sw, r.textlist, r.textlen, window)
-            x, wordDic = getWordVector(vec, wordDic)
-            y = 0
-            line = str(y)
-            for xi in x:
-              line = line + " "  + str(xi) + ":" + str(x[xi])
-            fileutil.writeFile(trainingSetNameSVM, line + "\n")
-  print("Postive Sample: " + str(positive) + " Negative Sample: " + str(negative))
-  print("Generate Trainset of SVM Succeed")
-  return wordDic    
-    
+  if types == 'train':
+    for d in data:
+      for i, sci in enumerate(d.sclist):
+        for j, scj in enumerate(d.sclist):
+          if i == j:
+            continue
+
+          th = sci.theme
+          sw = scj.word
+          if th.begin != -1:
+            length = 0
+            if th.begin > sw.begin:
+              length = th.begin - sw.begin + th.textlen
+            else:
+              length = sw.begin - th.begin + sw.textlen
+            if length <= window:
+              negative = negative + 1
+              vec = generate_vector(th, sw, d.textlist, d.textlen, window, dic)
+              train_data.append([vec, 0])
+
+  random.shuffle(train_data)
+  train_data = np.array(train_data)
+  np.save(model_in, train_data[:, 0])
+  np.save(model_label_in, train_data[:, 1])
+  a = np.load(model_in)
+  # for td in train_data:
+  #   fu.write_file(model_label_in, str(td[1]) + '\n')
+  #   vec = td[0]
+  #   line = ''
+  #   for v in vec:
+  #     line = line + v + '\t'
+  #   fu.write_file(model_in, line + '\n')
+  print('Postive Sample: %d Negative Sample: %d' % (positive, negative))
+  print('Generate ' + types + ' DataSet of Model Succeed')    
+
+def evaluate(data, result):
+  tp = 0
+  fp = 0
+  fn1 = 0
+  fn2 = 0
+  
+  return f1  
 
 def main():
   trainfile = 'data/trainset_semi_fixed.csv'
@@ -200,18 +169,17 @@ def main():
   valid_data = encapsulate(valid_data)
   test_data = encapsulate(test_data)
   
-  dirname = 'crf'
-  if os.path.exists(dirname):
-    fu.rmdir(dirname)
-  os.mkdir(dirname)
-
+  mkdir('crf')
   word_dic = generate_dic(train_data)
 
-  get_crf_input(train_data, 'train')
-  get_crf_input(train_data, 'valid')
-  get_crf_input(train_data, 'test')
+  # get_crf_input(train_data, 'train')
+  # get_crf_input(valid_data, 'valid')
+  # get_crf_input(test_data, 'test')
 
-  get_model_input()
+  mkdir('model')
+  get_model_input(train_data, 'train', word_dic)
+  get_model_input(valid_data, 'valid', word_dic)
+  get_model_input(test_data, 'test', word_dic)
 
 
 if __name__ == '__main__':
