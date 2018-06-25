@@ -330,13 +330,13 @@ def main():
   get_model_train_input(valid_data, 'valid', word_dic)
   vec_list, vec_word_list = get_model_test_label_input(test_data, test_list, 'test', word_dic)
   
-  # mkdir('model')
-  # train_label()
+  mkdir('model')
+  train_label()
   predict_label()
   vec_list, vec_word_list = parse_label(vec_list, vec_word_list, 'nn/label_result.npy')
   print('VEC SIZE: %d %d' % (len(vec_list), len(vec_word_list)))
 
-  # train_anls()
+  train_anls()
   predict_anls()
   pre_test_data = parse_anls(test_data, vec_word_list, 'nn/anls_result.npy')
   # print(pre_test_data)
