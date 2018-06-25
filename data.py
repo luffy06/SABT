@@ -88,7 +88,7 @@ class SentimentCell(object):
   def __init__(self, theme, word, anls):
     self.theme = theme
     self.word = word
-    self.anls = anls
+    self.anls = int(anls)
 
 class Row(object):
 

@@ -42,7 +42,7 @@ def main(_):
         vocabulary_word2index_label,vocabulary_index2word_label = None,None
         vocab_size = 12046
 
-        testX = np.load('nn/model_label_test.npy')
+        testX = np.load('nn/model_test.npy')
         testX = pad_sequences(testX,FLAGS.sentence_len)
         print('testX shape {}'.format(testX.shape))
 

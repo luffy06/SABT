@@ -9,7 +9,6 @@ TRAIN_RATE = 0.8
 VALID_RATE = 0.3
 
 crf_model_file = 'model/model_file'
-label_model_file = 'model/model_label_final.ckpt'
 window = 20
 
 def mkdir(dirname):
@@ -22,7 +21,7 @@ def load_data(filename):
   return datas
 
 def apart(datas):
-  random.shuffle(datas)
+  # random.shuffle(datas)
   train = []
   valid = []
   test = []
@@ -198,7 +197,7 @@ def get_model_train_input(data, types, dic):
       positive = positive + 1
       vec = generate_vector(sc.theme, sc.word, d.textlist, d.textlen, dic)
       train_data.append([vec, 1])
-      train_anls.append([vec, sc.anls])
+      train_anls.append([vec, sc.anls + 1])
 
   if types == 'train':
     for d in data:
@@ -245,7 +244,7 @@ def get_model_test_label_input(datas, word_list, types, dic):
     for j, sw in enumerate(sw_list):
       vec = generate_vector(Word('', -1), sw, row.textlist, row.textlen, dic)
       vec_list.append([vec, i])
-      vec_word_list.append((SentimentCell(Word('', -1), sw, None), i))
+      vec_word_list.append((SentimentCell(Word('', -1), sw, -100), i))
       for k, th in enumerate(th_list):
         length = 0
         if th.begin > sw.begin:
@@ -255,7 +254,7 @@ def get_model_test_label_input(datas, word_list, types, dic):
         if length <= window:
           vec = generate_vector(th, sw, row.textlist, row.textlen, dic)
           vec_list.append([vec, i])
-          vec_word_list.append((SentimentCell(th, sw, None), i))
+          vec_word_list.append((SentimentCell(th, sw, -100), i))
           size = size + 1
   vec_list = np.array(vec_list)
   np.save(model_in, vec_list[:, 0])
@@ -272,8 +271,7 @@ def predict_label():
 # filter datas where label equals 1
 def parse_label(datas, word_datas, filename):
   lines = np.load(filename)
-  print(type(lines))
-  idx = np.where(lines == 1)
+  idx = np.where(lines == 1)[0]
   ndatas = datas[idx]
   nwdatas = []
   for i in idx:
@@ -299,7 +297,7 @@ def parse_anls(datas, word_list, filename):
   for i, wl in enumerate(word_list):
     w = wl[0]
     index = wl[1]
-    w.anls = lines[i]
+    w.anls = lines[i] - 1
     assert(index >= 0 and index < len(datas))
     ndatas[index].sclist.append(w)
   return ndatas
@@ -330,13 +328,11 @@ def main():
   get_model_train_input(valid_data, 'valid', word_dic)
   vec_list, vec_word_list = get_model_test_label_input(test_data, test_list, 'test', word_dic)
 
-  if os.path.exists(label_model_file) == False:
-    train_label()
+  # train_label()
   predict_label()
   vec_list, vec_word_list = parse_label(vec_list, vec_word_list, 'nn/label_result.npy')
   
-  if os.path.exists(anls_model_file) == False:
-    train_anls()
+  train_anls()
   predict_anls()
   pre_test_data = parse_anls(test_data, vec_word_list, 'nn/anls_result.npy')
   print(pre_test_data)

@@ -42,13 +42,7 @@ def main(_):
         vocabulary_word2index_label,vocabulary_index2word_label = None,None
         vocab_size = 12046
         
-        lines = fu.read_file('config')
-        m = {}
-        for l in lines:
-            ls = l.split('=')
-            m[ls[0]] = ls[1]
-
-        testX = np.load('nn/' + m['test_x'])
+        testX = np.load('nn/model_test.npy')
         testX = pad_sequences(testX,FLAGS.sentence_len)
         print('testX shape {}'.format(testX.shape))
 
