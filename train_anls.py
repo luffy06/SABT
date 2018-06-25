@@ -10,8 +10,6 @@ import os
 #import word2vec
 #import pickle
 
-import fileutil as fu
-
 #configuration
 FLAGS=tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer("num_classes",2,"number of label")

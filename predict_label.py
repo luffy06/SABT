@@ -41,14 +41,8 @@ def main(_):
         vocabulary_word2index, vocabulary_index2word = None,None
         vocabulary_word2index_label,vocabulary_index2word_label = None,None
         vocab_size = 12046
-        
-        lines = fu.read_file('config')
-        m = {}
-        for l in lines:
-            ls = l.split('=')
-            m[ls[0]] = ls[1]
 
-        testX = np.load('nn/' + m['test_x'])
+        testX = np.load('nn/model_label_test.npy')
         testX = pad_sequences(testX,FLAGS.sentence_len)
         print('testX shape {}'.format(testX.shape))
 
@@ -84,7 +78,7 @@ def main(_):
         result = np.array(result)
         print(result[:5])
         print(result.shape)
-        np.save('nn/test_result.npy',result)
+        np.save('nn/label_result.npy',result)
 #         print(result[:5])
 #         print(result.shape)
 

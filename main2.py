@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 import fileutil as fu
-from data import Row, Word
+from data import Row, Word, SentimentCell
 
 TRAIN_RATE = 0.8
 VALID_RATE = 0.3
@@ -231,7 +231,7 @@ def get_model_train_input(data, types, dic):
   print('Postive Sample: %d Negative Sample: %d' % (positive, negative))
   print('Generate ' + types + ' DataSet of Model Succeed')    
 
-def get_model_test_input(datas, word_list, types, dic):
+def get_model_test_label_input(datas, word_list, types, dic):
   model_in = 'nn/model_' + types + '.npy'
   assert(len(datas) == len(word_list))
   vec_list = []
@@ -245,7 +245,7 @@ def get_model_test_input(datas, word_list, types, dic):
     for j, sw in enumerate(sw_list):
       vec = generate_vector(Word('', -1), sw, row.textlist, row.textlen, dic)
       vec_list.append([vec, i])
-      vec_word_list.append((Word('', -1), sw))
+      vec_word_list.append((SentimentCell(Word('', -1), sw, None), i))
       for k, th in enumerate(th_list):
         length = 0
         if th.begin > sw.begin:
@@ -255,7 +255,7 @@ def get_model_test_input(datas, word_list, types, dic):
         if length <= window:
           vec = generate_vector(th, sw, row.textlist, row.textlen, dic)
           vec_list.append([vec, i])
-          vec_word_list.append((th, sw))
+          vec_word_list.append((SentimentCell(th, sw, None), i))
           size = size + 1
   vec_list = np.array(vec_list)
   np.save(model_in, vec_list[:, 0])
@@ -269,8 +269,10 @@ def predict_label():
   cmd = 'python3 predict_label.py'
   os.system(cmd)
 
+# filter datas where label equals 1
 def parse_label(datas, word_datas, filename):
   lines = np.load(filename)
+  print(type(lines))
   idx = np.where(lines == 1)
   ndatas = datas[idx]
   nwdatas = []
@@ -288,9 +290,19 @@ def predict_anls():
   cmd = 'python3 predict_anls.py'
   os.system(cmd)
 
-def parse_anls(datas, filename):
+def parse_anls(datas, word_list, filename):
   lines = np.load(filename)
-
+  assert(len(lines) == len(word_list))
+  ndatas = datas
+  for i, nd in enumerate(ndatas):
+    ndatas[i].sclist = []
+  for i, wl in enumerate(word_list):
+    w = wl[0]
+    index = wl[1]
+    w.anls = lines[i]
+    assert(index >= 0 and index < len(datas))
+    ndatas[index].sclist.append(w)
+  return ndatas
 
 def main():
   trainfile = 'data/trainset_semi_fixed.csv'
@@ -316,17 +328,18 @@ def main():
   mkdir('nn')
   get_model_train_input(train_data, 'train', word_dic)
   get_model_train_input(valid_data, 'valid', word_dic)
-  vec_list, vec_word_list = get_model_test_input(test_data, test_list, 'test', word_dic)
+  vec_list, vec_word_list = get_model_test_label_input(test_data, test_list, 'test', word_dic)
 
   if os.path.exists(label_model_file) == False:
     train_label()
   predict_label()
-  vec_list, vec_word_list = parse_label(vec_list, vec_word_list, )
+  vec_list, vec_word_list = parse_label(vec_list, vec_word_list, 'nn/label_result.npy')
   
   if os.path.exists(anls_model_file) == False:
     train_anls()
   predict_anls()
-  parse_anls()
+  pre_test_data = parse_anls(test_data, vec_word_list, 'nn/anls_result.npy')
+  print(pre_test_data)
 
 if __name__ == '__main__':
   main()

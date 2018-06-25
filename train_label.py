@@ -10,12 +10,10 @@ import os
 #import word2vec
 #import pickle
 
-import fileutil as fu
-
 #configuration
 FLAGS=tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer("num_classes",2,"number of label")
-tf.app.flags.DEFINE_float("learning_rate",0.0001,"learning rate")
+tf.app.flags.DEFINE_float("learning_rate",0.01,"learning rate")
 tf.app.flags.DEFINE_integer("batch_size", 128, "Batch size for training/evaluating.") #批处理的大小 32-->128
 tf.app.flags.DEFINE_integer("decay_steps", 50, "how many steps before decay learning rate.") #6000批处理的大小 32-->128
 tf.app.flags.DEFINE_float("decay_rate", 0.5, "Rate of decay for learning rate.") #0.65一次衰减多少
