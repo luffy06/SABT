@@ -184,7 +184,7 @@ def generate_vector(th, sw, textlist, length, dic):
 def get_model_train_input(data, types, dic):
   model_in = 'nn/model_' + types + '.npy'
   model_label_in = 'nn/model_label_' + types + '.npy'
-  model_anls_in = 'nn/model_anls' + types + '.npy'
+  model_anls_in = 'nn/model_anls_' + types + '.npy'
   model_anls_label_in = 'nn/model_anls_label_' + types + '.npy'
   positive = 0
   negative = 0
@@ -288,16 +288,16 @@ def main():
   get_crf_input(valid_data, 'valid')
   get_crf_input(test_data, 'test')
 
-  # if os.path.exists(crf_model_file) == False:
-  #   train_crf('crf/crf_train.in')
-  # predict_crf('crf/crf_test.in', 'crf/crf_test_result.in')
+  if os.path.exists(crf_model_file) == False:
+    train_crf('crf/crf_train.in')
+  predict_crf('crf/crf_test.in', 'crf/crf_test_result.in')
 
-  # test_list = parse_crf('crf/crf_test_result.in')
+  test_list = parse_crf('crf/crf_test_result.in')
 
   mkdir('nn')
   get_model_train_input(train_data, 'train', word_dic)
   get_model_train_input(valid_data, 'valid', word_dic)
-  # get_model_test_input(test_data, test_list, 'test', word_dic)
+  get_model_test_input(test_data, test_list, 'test', word_dic)
 
 
 if __name__ == '__main__':
