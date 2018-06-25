@@ -184,39 +184,46 @@ def generate_vector(th, sw, textlist, length, dic):
 def get_model_train_input(data, types, dic):
   model_in = 'nn/model_' + types + '.npy'
   model_label_in = 'nn/model_label_' + types + '.npy'
+  model_anls_in = 'nn/model_anls' + types + '.npy'
+  model_anls_label_in = 'nn/model_anls_label_' + types + '.npy'
   positive = 0
   negative = 0
   train_data = []
+  train_anls = []
   for d in data:
     for sc in d.sclist:
       positive = positive + 1
       vec = generate_vector(sc.theme, sc.word, d.textlist, d.textlen, dic)
       train_data.append([vec, 1])
+      train_anls.append([vec, sc.anls])
 
-  for d in data:
-    for i, sci in enumerate(d.sclist):
-      for j, scj in enumerate(d.sclist):
-        if i == j:
-          continue
+  if types == 'train':
+    for d in data:
+      for i, sci in enumerate(d.sclist):
+        for j, scj in enumerate(d.sclist):
+          if i == j:
+            continue
 
-        th = sci.theme
-        sw = scj.word
-        if th.begin != -1:
-          length = 0
-          if th.begin > sw.begin:
-            length = th.begin - sw.begin + th.textlen
-          else:
-            length = sw.begin - th.begin + sw.textlen
-          if length <= window:
-            negative = negative + 1
-            vec = generate_vector(th, sw, d.textlist, d.textlen, dic)
-            train_data.append([vec, 0])
+          th = sci.theme
+          sw = scj.word
+          if th.begin != -1:
+            length = 0
+            if th.begin > sw.begin:
+              length = th.begin - sw.begin + th.textlen
+            else:
+              length = sw.begin - th.begin + sw.textlen
+            if length <= window:
+              negative = negative + 1
+              vec = generate_vector(th, sw, d.textlist, d.textlen, dic)
+              train_data.append([vec, 0])
 
   random.shuffle(train_data)
   train_data = np.array(train_data)
+  train_anls = np.array(train_anls)
   np.save(model_in, train_data[:, 0])
   np.save(model_label_in, train_data[:, 1])
-  a = np.load(model_in)
+  np.save(model_anls_in, train_anls[:, 0])
+  np.save(model_anls_label_in, train_anls[:, 1])
   # for td in train_data:
   #   fu.write_file(model_label_in, str(td[1]) + '\n')
   #   vec = td[0]
@@ -281,18 +288,16 @@ def main():
   get_crf_input(valid_data, 'valid')
   get_crf_input(test_data, 'test')
 
-  if os.path.exists(crf_model_file) == False:
-    train_crf('crf/crf_train.in')
-  predict_crf('crf/crf_valid.in', 'crf/crf_valid_result.in')
-  predict_crf('crf/crf_test.in', 'crf/crf_test_result.in')
+  # if os.path.exists(crf_model_file) == False:
+  #   train_crf('crf/crf_train.in')
+  # predict_crf('crf/crf_test.in', 'crf/crf_test_result.in')
 
-  valid_list = parse_crf('crf/crf_valid_result.in')
-  test_list = parse_crf('crf/crf_test_result.in')
+  # test_list = parse_crf('crf/crf_test_result.in')
 
   mkdir('nn')
   get_model_train_input(train_data, 'train', word_dic)
-  get_model_test_input(valid_data, valid_list, 'valid', word_dic)
-  get_model_test_input(test_data, test_list, 'test', word_dic)
+  get_model_train_input(valid_data, 'valid', word_dic)
+  # get_model_test_input(test_data, test_list, 'test', word_dic)
 
 
 if __name__ == '__main__':
