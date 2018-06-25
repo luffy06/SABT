@@ -22,7 +22,7 @@ tf.app.flags.DEFINE_string("ckpt_dir","model/","checkpoint location for the mode
 tf.app.flags.DEFINE_integer("sentence_len",40,"max sentence length")
 tf.app.flags.DEFINE_integer("embed_size",200,"embedding size")
 tf.app.flags.DEFINE_boolean("is_training",True,"is traning.true:tranining,false:testing/inference")
-tf.app.flags.DEFINE_integer("num_epochs",10,"number of epochs to run.")
+tf.app.flags.DEFINE_integer("num_epochs",1,"number of epochs to run.")
 tf.app.flags.DEFINE_integer("validate_every", 1, "Validate every validate_every epochs.") #每10轮做一次验证
 tf.app.flags.DEFINE_boolean("use_embedding",False,"whether to use embedding or not.")
 #tf.app.flags.DEFINE_string("cache_path","text_cnn_checkpoint/data_cache.pik","checkpoint location for the model")
@@ -40,7 +40,7 @@ def main(_):
         trainX, trainY, testX, testY = None, None, None, None
         vocabulary_word2index, vocabulary_index2word = None,None
         vocabulary_word2index_label,vocabulary_index2word_label = None,None
-        vocab_size = 12046
+        vocab_size = 2747
         trainX = np.load('nn/model_train.npy')
         trainY = np.load('nn/model_label_train.npy')
         validX = np.load('nn/model_valid.npy')

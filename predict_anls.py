@@ -12,8 +12,8 @@ import os
 
 #configuration
 FLAGS=tf.app.flags.FLAGS
-tf.app.flags.DEFINE_integer("num_classes",2,"number of label")
-tf.app.flags.DEFINE_float("learning_rate",0.0001,"learning rate")
+tf.app.flags.DEFINE_integer("num_classes",3,"number of label")
+tf.app.flags.DEFINE_float("learning_rate",0.01,"learning rate")
 tf.app.flags.DEFINE_integer("batch_size", 128, "Batch size for training/evaluating.") #批处理的大小 32-->128
 tf.app.flags.DEFINE_integer("decay_steps", 50, "how many steps before decay learning rate.") #6000批处理的大小 32-->128
 tf.app.flags.DEFINE_float("decay_rate", 0.5, "Rate of decay for learning rate.") #0.65一次衰减多少
@@ -22,7 +22,7 @@ tf.app.flags.DEFINE_string("ckpt_dir","model/","checkpoint location for the mode
 tf.app.flags.DEFINE_integer("sentence_len",40,"max sentence length")
 tf.app.flags.DEFINE_integer("embed_size",200,"embedding size")
 tf.app.flags.DEFINE_boolean("is_training",True,"is traning.true:tranining,false:testing/inference")
-tf.app.flags.DEFINE_integer("num_epochs",100,"number of epochs to run.")
+tf.app.flags.DEFINE_integer("num_epochs",10,"number of epochs to run.")
 tf.app.flags.DEFINE_integer("validate_every", 1, "Validate every validate_every epochs.") #每10轮做一次验证
 tf.app.flags.DEFINE_boolean("use_embedding",False,"whether to use embedding or not.")
 #tf.app.flags.DEFINE_string("cache_path","text_cnn_checkpoint/data_cache.pik","checkpoint location for the model")
@@ -40,9 +40,9 @@ def main(_):
         trainX, trainY, testX, testY = None, None, None, None
         vocabulary_word2index, vocabulary_index2word = None,None
         vocabulary_word2index_label,vocabulary_index2word_label = None,None
-        vocab_size = 12046
+        vocab_size = 2747
         
-        testX = np.load('nn/model_test.npy')
+        testX = np.load('nn/model_anls_test.npy')
         testX = pad_sequences(testX,FLAGS.sentence_len)
         print('testX shape {}'.format(testX.shape))
 
@@ -57,7 +57,7 @@ def main(_):
         saver=tf.train.Saver()
         if os.path.exists(FLAGS.ckpt_dir):
             print("Restoring Variables from Checkpoint")
-            saver.restore(sess,FLAGS.ckpt_dir+"model.ckpt")
+            saver.restore(sess,FLAGS.ckpt_dir+"model_anls_final.ckpt")
         else:
             print('Initializing Variables')
             sess.run(tf.global_variables_initializer())
@@ -65,22 +65,23 @@ def main(_):
                 assign_pretrained_word_embedding(sess,textCNN)
         curr_epoch=sess.run(textCNN.epoch_step)
         #3.feed data & training
-        number_of_training_data=len(testX)+1
+        number_of_training_data=len(testX)
         batch_size=FLAGS.batch_size
+        start_limit=int(np.ceil(number_of_training_data/(1.0*batch_size)))
        
         result = []
-        for start, end in zip(range(0, number_of_training_data, batch_size),range(batch_size, number_of_training_data, batch_size)):
+        for start, end in zip(range(0, start_limit),range(1, start_limit+1)):
+            start=start*batch_size
+            end=min(end*batch_size, number_of_training_data)
             feed_dict = {textCNN.input_x: testX[start:end],textCNN.dropout_keep_prob: 1}
 
             predictions = sess.run([textCNN.predictions],feed_dict) #curr_acc--->TextCNN.accuracy
             predictions = np.array(predictions).reshape([-1,1])
             result.extend(predictions)
         result = np.array(result)
-        print(result[:5])
-        print(result.shape)
+        # print(result[:5])
+        print('result shape {}'.format(result.shape))
         np.save('nn/anls_result.npy',result)
-#         print(result[:5])
-#         print(result.shape)
 
 if __name__ == "__main__":
     tf.app.run()

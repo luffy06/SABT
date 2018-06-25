@@ -105,8 +105,8 @@ class TextCNN:
             logits = tf.matmul(self.h_drop,self.W_projection) + self.b_projection  #shape:[None, self.num_classes]==tf.matmul([None,self.embed_size],[self.embed_size,self.num_classes])
         
         class_weight = tf.constant([ 100.0, 1.0])
-        weighted_logits = tf.multiply(logits, class_weight) # shape [batch_size, 2]
-        return weighted_logits
+        # weighted_logits = tf.multiply(logits, class_weight) # shape [batch_size, 2]
+        return logits
 
     def loss(self,l2_lambda=0.0001):#0.001
         with tf.name_scope("loss"):

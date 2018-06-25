@@ -83,12 +83,18 @@ class Word(object):
     l = parse_text(self.text)
     self.textlen = len(l)
 
+  def __str__(self):
+    return self.text
+
 class SentimentCell(object):
 
   def __init__(self, theme, word, anls):
     self.theme = theme
     self.word = word
     self.anls = int(anls)
+
+  def __str__(self):
+    return self.theme.text + ' ' + self.word.text + ' %d' % (self.anls)
 
 class Row(object):
 

@@ -8,7 +8,7 @@ from data import Row, Word, SentimentCell
 TRAIN_RATE = 0.8
 VALID_RATE = 0.3
 
-crf_model_file = 'model/model_file'
+crf_model_file = 'crfmodel/model_file'
 window = 20
 
 def mkdir(dirname):
@@ -34,6 +34,7 @@ def apart(datas):
       valid.append(d)
     else:
       test.append(d)
+  print('TRAIN:%d\tVALID:%d\tTEST:%d' %(len(train), len(valid), len(test)))
   return train, valid, test
 
 def encapsulate(datas):
@@ -138,7 +139,7 @@ def generate_dic(data):
         ct = ct + 1
         word_dic[t] = ct
         
-  print('Dic Size: %d' % (ct))
+  print('DIC SIZE: %d' % (ct))
   return word_dic
 
 def get_window(textlist, position, direction, length):
@@ -231,7 +232,7 @@ def get_model_train_input(data, types, dic):
   print('Generate ' + types + ' DataSet of Model Succeed')    
 
 def get_model_test_label_input(datas, word_list, types, dic):
-  model_in = 'nn/model_' + types + '.npy'
+  model_in = 'nn/model_label_' + types + '.npy'
   assert(len(datas) == len(word_list))
   vec_list = []
   vec_word_list = []
@@ -276,7 +277,7 @@ def parse_label(datas, word_datas, filename):
   nwdatas = []
   for i in idx:
     nwdatas.append(word_datas[i])
-  model_in = 'nn/model_test.npy'
+  model_in = 'nn/model_anls_test.npy'
   np.save(model_in, ndatas[:, 0])
   return ndatas, nwdatas
 
@@ -290,6 +291,7 @@ def predict_anls():
 
 def parse_anls(datas, word_list, filename):
   lines = np.load(filename)
+  print('%d %d' %(len(lines), len(word_list)))
   assert(len(lines) == len(word_list))
   ndatas = datas
   for i, nd in enumerate(ndatas):
@@ -327,15 +329,17 @@ def main():
   get_model_train_input(train_data, 'train', word_dic)
   get_model_train_input(valid_data, 'valid', word_dic)
   vec_list, vec_word_list = get_model_test_label_input(test_data, test_list, 'test', word_dic)
-
+  
+  # mkdir('model')
   # train_label()
   predict_label()
   vec_list, vec_word_list = parse_label(vec_list, vec_word_list, 'nn/label_result.npy')
-  
-  train_anls()
+  print('VEC SIZE: %d %d' % (len(vec_list), len(vec_word_list)))
+
+  # train_anls()
   predict_anls()
   pre_test_data = parse_anls(test_data, vec_word_list, 'nn/anls_result.npy')
-  print(pre_test_data)
+  # print(pre_test_data)
 
 if __name__ == '__main__':
   main()
