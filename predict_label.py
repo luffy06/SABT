@@ -84,7 +84,7 @@ def main(_):
         result = np.array(result)
         print(result[:5])
         print(result.shape)
-        np.save('../../result/cnn_result.npy',result)
+        np.save('nn/test_result.npy',result)
 #         print(result[:5])
 #         print(result.shape)
 

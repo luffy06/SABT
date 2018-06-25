@@ -227,13 +227,7 @@ def get_model_train_input(data, types, dic):
   np.save(model_label_in, train_data[:, 1])
   np.save(model_anls_in, train_anls[:, 0])
   np.save(model_anls_label_in, train_anls[:, 1])
-  # for td in train_data:
-  #   fu.write_file(model_label_in, str(td[1]) + '\n')
-  #   vec = td[0]
-  #   line = ''
-  #   for v in vec:
-  #     line = line + v + '\t'
-  #   fu.write_file(model_in, line + '\n')
+
   print('Postive Sample: %d Negative Sample: %d' % (positive, negative))
   print('Generate ' + types + ' DataSet of Model Succeed')    
 
@@ -241,7 +235,7 @@ def get_model_test_input(datas, word_list, types, dic):
   model_in = 'nn/model_' + types + '.npy'
   assert(len(datas) == len(word_list))
   vec_list = []
-  size_list = []
+  vec_word_list = []
   for i, l in enumerate(word_list):
     row = datas[i]
     th_list = l[0]
@@ -250,7 +244,8 @@ def get_model_test_input(datas, word_list, types, dic):
 
     for j, sw in enumerate(sw_list):
       vec = generate_vector(Word('', -1), sw, row.textlist, row.textlen, dic)
-      vec_list.append(vec)
+      vec_list.append([vec, i])
+      vec_word_list.append((Word('', -1), sw))
       for k, th in enumerate(th_list):
         length = 0
         if th.begin > sw.begin:
@@ -259,20 +254,12 @@ def get_model_test_input(datas, word_list, types, dic):
           length = sw.begin - th.begin + sw.textlen
         if length <= window:
           vec = generate_vector(th, sw, row.textlist, row.textlen, dic)
-          vec_list.append(vec)
+          vec_list.append([vec, i])
+          vec_word_list.append((th, sw))
           size = size + 1
-    size_list.append(size)
-
-  np.save(model_in, np.array(vec_list))
-  return (vec_list, size_list)
-
-def evaluate(data, result):
-  tp = 0
-  fp = 0
-  fn1 = 0
-  fn2 = 0
-  
-  return f1  
+  vec_list = np.array(vec_list)
+  np.save(model_in, vec_list[:, 0])
+  return vec_list, vec_word_list
 
 def train_label():
   cmd = 'python3 train_label.py'
@@ -282,13 +269,28 @@ def predict_label():
   cmd = 'python3 predict_label.py'
   os.system(cmd)
 
-def train_label():
+def parse_label(datas, word_datas, filename):
+  lines = np.load(filename)
+  idx = np.where(lines == 1)
+  ndatas = datas[idx]
+  nwdatas = []
+  for i in idx:
+    nwdatas.append(word_datas[i])
+  model_in = 'nn/model_test.npy'
+  np.save(model_in, ndatas[:, 0])
+  return ndatas, nwdatas
+
+def train_anls():
   cmd = 'python3 train_anls.py'
   os.system(cmd)
 
-def predict_label():
+def predict_anls():
   cmd = 'python3 predict_anls.py'
   os.system(cmd)
+
+def parse_anls(datas, filename):
+  lines = np.load(filename)
+
 
 def main():
   trainfile = 'data/trainset_semi_fixed.csv'
@@ -298,8 +300,6 @@ def main():
   train_data = encapsulate(train_data)
   valid_data = encapsulate(valid_data)
   test_data = encapsulate(test_data)
-  
-
   word_dic = generate_dic(train_data)
 
   mkdir('crf')
@@ -316,11 +316,17 @@ def main():
   mkdir('nn')
   get_model_train_input(train_data, 'train', word_dic)
   get_model_train_input(valid_data, 'valid', word_dic)
-  get_model_test_input(test_data, test_list, 'test', word_dic)
+  vec_list, vec_word_list = get_model_test_input(test_data, test_list, 'test', word_dic)
 
   if os.path.exists(label_model_file) == False:
     train_label()
-
+  predict_label()
+  vec_list, vec_word_list = parse_label(vec_list, vec_word_list, )
+  
+  if os.path.exists(anls_model_file) == False:
+    train_anls()
+  predict_anls()
+  parse_anls()
 
 if __name__ == '__main__':
   main()
