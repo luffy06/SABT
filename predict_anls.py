@@ -4,7 +4,7 @@
 import sys
 import tensorflow as tf
 import numpy as np
-from p7_TextCNN_model import TextCNN
+from model import TextCNN
 from keras.preprocessing.sequence import pad_sequences
 import os
 #import word2vec
@@ -13,18 +13,18 @@ import os
 #configuration
 FLAGS=tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer("num_classes",2,"number of label")
-tf.app.flags.DEFINE_float("learning_rate",0.001,"learning rate")
-tf.app.flags.DEFINE_integer("batch_size", 303, "Batch size for training/evaluating.") #批处理的大小 32-->128
-tf.app.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.") #6000批处理的大小 32-->128
-tf.app.flags.DEFINE_float("decay_rate", 0.65, "Rate of decay for learning rate.") #0.65一次衰减多少
+tf.app.flags.DEFINE_float("learning_rate",0.0001,"learning rate")
+tf.app.flags.DEFINE_integer("batch_size", 128, "Batch size for training/evaluating.") #批处理的大小 32-->128
+tf.app.flags.DEFINE_integer("decay_steps", 50, "how many steps before decay learning rate.") #6000批处理的大小 32-->128
+tf.app.flags.DEFINE_float("decay_rate", 0.5, "Rate of decay for learning rate.") #0.65一次衰减多少
 #tf.app.flags.DEFINE_integer("num_sampled",50,"number of noise sampling") #100
-tf.app.flags.DEFINE_string("ckpt_dir","ckpt/","checkpoint location for the model")
-tf.app.flags.DEFINE_integer("sentence_len",48,"max sentence length")
+tf.app.flags.DEFINE_string("ckpt_dir","model/","checkpoint location for the model")
+tf.app.flags.DEFINE_integer("sentence_len",40,"max sentence length")
 tf.app.flags.DEFINE_integer("embed_size",200,"embedding size")
 tf.app.flags.DEFINE_boolean("is_training",True,"is traning.true:tranining,false:testing/inference")
-tf.app.flags.DEFINE_integer("num_epochs",50,"number of epochs to run.")
+tf.app.flags.DEFINE_integer("num_epochs",100,"number of epochs to run.")
 tf.app.flags.DEFINE_integer("validate_every", 1, "Validate every validate_every epochs.") #每10轮做一次验证
-tf.app.flags.DEFINE_boolean("use_embedding",True,"whether to use embedding or not.")
+tf.app.flags.DEFINE_boolean("use_embedding",False,"whether to use embedding or not.")
 #tf.app.flags.DEFINE_string("cache_path","text_cnn_checkpoint/data_cache.pik","checkpoint location for the model")
 #train-zhihu4-only-title-all.txt
 tf.app.flags.DEFINE_string("traning_data_path","train-zhihu4-only-title-all.txt","path of traning data.") #O.K.train-zhihu4-only-title-all.txt-->training-data/test-zhihu4-only-title.txt--->'training-data/train-zhihu5-only-title-multilabel.txt'
@@ -42,7 +42,13 @@ def main(_):
         vocabulary_word2index_label,vocabulary_index2word_label = None,None
         vocab_size = 12046
         
-        testX = np.load('../../processed_data/test_x.npy')
+        lines = fu.read_file('config')
+        m = {}
+        for l in lines:
+            ls = l.split('=')
+            m[ls[0]] = ls[1]
+
+        testX = np.load('nn/' + m['test_x'])
         testX = pad_sequences(testX,FLAGS.sentence_len)
         print('testX shape {}'.format(testX.shape))
 

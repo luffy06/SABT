@@ -9,6 +9,7 @@ TRAIN_RATE = 0.8
 VALID_RATE = 0.3
 
 crf_model_file = 'model/model_file'
+label_model_file = 'model/model_label_final.ckpt'
 window = 20
 
 def mkdir(dirname):
@@ -271,6 +272,22 @@ def evaluate(data, result):
   
   return f1  
 
+def train_label():
+  cmd = 'python3 train_label.py'
+  os.system(cmd)
+
+def predict_label():
+  cmd = 'python3 predict_label.py'
+  os.system(cmd)
+
+def train_label():
+  cmd = 'python3 train_anls.py'
+  os.system(cmd)
+
+def predict_label():
+  cmd = 'python3 predict_anls.py'
+  os.system(cmd)
+
 def main():
   trainfile = 'data/trainset_semi_fixed.csv'
   origindatas = load_data(trainfile)
@@ -298,6 +315,9 @@ def main():
   get_model_train_input(train_data, 'train', word_dic)
   get_model_train_input(valid_data, 'valid', word_dic)
   get_model_test_input(test_data, test_list, 'test', word_dic)
+
+  if os.path.exists(label_model_file) == False:
+    train_label()
 
 
 if __name__ == '__main__':

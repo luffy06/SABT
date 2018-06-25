@@ -4,27 +4,29 @@
 import sys
 import tensorflow as tf
 import numpy as np
-from p7_TextCNN_model import TextCNN
+from model import TextCNN
 from keras.preprocessing.sequence import pad_sequences
 import os
 #import word2vec
 #import pickle
 
+import fileutil as fu
+
 #configuration
 FLAGS=tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer("num_classes",2,"number of label")
-tf.app.flags.DEFINE_float("learning_rate",0.01,"learning rate")
+tf.app.flags.DEFINE_float("learning_rate",0.0001,"learning rate")
 tf.app.flags.DEFINE_integer("batch_size", 128, "Batch size for training/evaluating.") #批处理的大小 32-->128
-tf.app.flags.DEFINE_integer("decay_steps", 1000, "how many steps before decay learning rate.") #6000批处理的大小 32-->128
-tf.app.flags.DEFINE_float("decay_rate", 0.65, "Rate of decay for learning rate.") #0.65一次衰减多少
+tf.app.flags.DEFINE_integer("decay_steps", 50, "how many steps before decay learning rate.") #6000批处理的大小 32-->128
+tf.app.flags.DEFINE_float("decay_rate", 0.5, "Rate of decay for learning rate.") #0.65一次衰减多少
 #tf.app.flags.DEFINE_integer("num_sampled",50,"number of noise sampling") #100
-tf.app.flags.DEFINE_string("ckpt_dir","ckpt/","checkpoint location for the model")
-tf.app.flags.DEFINE_integer("sentence_len",48,"max sentence length")
+tf.app.flags.DEFINE_string("ckpt_dir","model/","checkpoint location for the model")
+tf.app.flags.DEFINE_integer("sentence_len",40,"max sentence length")
 tf.app.flags.DEFINE_integer("embed_size",200,"embedding size")
 tf.app.flags.DEFINE_boolean("is_training",True,"is traning.true:tranining,false:testing/inference")
-tf.app.flags.DEFINE_integer("num_epochs",50,"number of epochs to run.")
+tf.app.flags.DEFINE_integer("num_epochs",100,"number of epochs to run.")
 tf.app.flags.DEFINE_integer("validate_every", 1, "Validate every validate_every epochs.") #每10轮做一次验证
-tf.app.flags.DEFINE_boolean("use_embedding",True,"whether to use embedding or not.")
+tf.app.flags.DEFINE_boolean("use_embedding",False,"whether to use embedding or not.")
 #tf.app.flags.DEFINE_string("cache_path","text_cnn_checkpoint/data_cache.pik","checkpoint location for the model")
 #train-zhihu4-only-title-all.txt
 tf.app.flags.DEFINE_string("traning_data_path","train-zhihu4-only-title-all.txt","path of traning data.") #O.K.train-zhihu4-only-title-all.txt-->training-data/test-zhihu4-only-title.txt--->'training-data/train-zhihu5-only-title-multilabel.txt'
@@ -41,11 +43,10 @@ def main(_):
         vocabulary_word2index, vocabulary_index2word = None,None
         vocabulary_word2index_label,vocabulary_index2word_label = None,None
         vocab_size = 12046
-        
-        trainX = np.load('../../processed_data/train_x.npy')
-        trainY = np.load('../../processed_data/train_y.npy')
-        validX = np.load('../../processed_data/valid_x.npy')
-        validY = np.load('../../processed_data/valid_y.npy')
+        trainX = np.load('nn/model_train.npy')
+        trainY = np.load('nn/model_label_train.npy')
+        validX = np.load('nn/model_valid.npy')
+        validY = np.load('nn/model_label_valid.npy')
         
         trainX = pad_sequences(trainX,FLAGS.sentence_len)
         validX = pad_sequences(validX,FLAGS.sentence_len)
@@ -95,12 +96,12 @@ def main(_):
                 
                 if best_valid_acc < eval_acc:
                     print('验证集准确度提高，保存模型！')
-                    save_path=FLAGS.ckpt_dir+"model.ckpt"
+                    save_path=FLAGS.ckpt_dir+"model_label.ckpt"
                     saver.save(sess,save_path)
                     best_valid_acc = eval_acc
         
         print('训练完毕，保存模型！')
-        save_path=FLAGS.ckpt_dir+"model_final.ckpt"
+        save_path=FLAGS.ckpt_dir+"model_label_final.ckpt"
         saver.save(sess,save_path)
 
                     
