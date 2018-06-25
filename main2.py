@@ -132,12 +132,14 @@ def parse_crf(filename):
 
 def generate_dic(data):
   word_dic = {}
-  ct = 1
+  ct = 0
   for d in data:
     for t in d.text:
       if t not in word_dic:
-        word_dic[t] = ct
         ct = ct + 1
+        word_dic[t] = ct
+        
+  print('Dic Size: %d' % (ct))
   return word_dic
 
 def get_window(textlist, position, direction, length):
