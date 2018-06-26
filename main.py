@@ -304,6 +304,40 @@ def parse_anls(datas, word_list, filename):
     ndatas[index].sclist.append(w)
   return ndatas
 
+def compare(scp, scd):
+  if scp.word.text != scd.word.text or scp.anls != scd.anls:
+    return False
+  if scd.theme.text in scp.theme.text:
+    return True
+  return False
+
+def evaluate(pre_data, data):
+  tp = 0
+  fp = 0
+  fn1 = 0
+  fn2 = 0
+  assert(len(pre_data) == len(data))
+  for i, p in enumerate(pre_data):
+    d = data[i]
+    idx = set()
+    for scp in p.sclist:
+      if len(idx) < d.sclist:
+        find = False
+        for j, scd in d.sclist:
+          if compare(scp, scd) == True:
+            tp = tp + 1
+            find = True
+        if find == False:
+          fp = fp + 1
+      else:
+        fn2 = fn2 + 1
+    fn1 = fn1 + len(d.sclist) - len(idx)
+
+  acc = (1.0 * tp) / (tp + fp + fn1)
+  recall = (1.0 * tp) / (tp + fp + fn2)
+  f1 = (2.0 * acc * recall) / (acc + recall)
+  return acc, recall, f1
+
 def main():
   trainfile = 'data/trainset_semi_fixed.csv'
   origindatas = load_data(trainfile)
@@ -339,7 +373,8 @@ def main():
   train_anls()
   predict_anls()
   pre_test_data = parse_anls(test_data, vec_word_list, 'nn/anls_result.npy')
-  # print(pre_test_data)
+  acc, recall, f1 = evaluate(pre_test_data, test_data)
+  print('ACC: %.3f\nRecall: %.3f\nF1: %.3f', %(acc, recall, f1))
 
 if __name__ == '__main__':
   main()
