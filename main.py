@@ -321,9 +321,9 @@ def evaluate(pre_data, data):
     d = data[i]
     idx = set()
     for scp in p.sclist:
-      if len(idx) < d.sclist:
+      if len(idx) < len(d.sclist):
         find = False
-        for j, scd in d.sclist:
+        for j, scd in enumerate(d.sclist):
           if compare(scp, scd) == True:
             tp = tp + 1
             find = True
@@ -336,6 +336,7 @@ def evaluate(pre_data, data):
   acc = (1.0 * tp) / (tp + fp + fn1)
   recall = (1.0 * tp) / (tp + fp + fn2)
   f1 = (2.0 * acc * recall) / (acc + recall)
+  print('TP:%d\tFP:%d\tFN1:%d\tFN2:%d' %(tp, fp, fn1, fn2))
   return acc, recall, f1
 
 def main():
@@ -374,7 +375,7 @@ def main():
   predict_anls()
   pre_test_data = parse_anls(test_data, vec_word_list, 'nn/anls_result.npy')
   acc, recall, f1 = evaluate(pre_test_data, test_data)
-  print('ACC: %.3f\nRecall: %.3f\nF1: %.3f', %(acc, recall, f1))
+  print('ACC: %.3f\nRecall: %.3f\nF1: %.3f' %(acc, recall, f1))
 
 if __name__ == '__main__':
   main()
