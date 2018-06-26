@@ -338,6 +338,23 @@ def evaluate(pre_data, data):
   print('TP:%d\tFP:%d\tFN1:%d\tFN2:%d' %(tp, fp, fn1, fn2))
   return acc, recall, f1
 
+def output(data):
+  csvdata = []
+  for d in data:
+    line = [d.rowid, d.text]
+    th = ''
+    sw = ''
+    anls = ''
+    for sc in d.sclist:
+      th = th + sc.theme.text + ';'
+      sw = sw + sc.word.text + ';'
+      anls = anls + str(sc.anls) + ';'
+    line.append(th)
+    line.append(sw)
+    line.append(anls)
+    csvdata.append(line)
+  fu.write_csv('result.csv', csvdata)
+
 def main():
   trainfile = 'data/trainset_semi_fixed.csv'
   origindatas = load_data(trainfile)
@@ -375,6 +392,7 @@ def main():
   pre_test_data = parse_anls(test_data, vec_word_list, 'nn/anls_result.npy')
   acc, recall, f1 = evaluate(pre_test_data, test_data)
   print('ACC: %.3f\nRecall: %.3f\nF1: %.3f' %(acc, recall, f1))
+  output(pre_test_data)
 
 if __name__ == '__main__':
   main()
